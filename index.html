@@ -1455,8 +1455,12 @@
     return last.b1+(x-last.x1)/BEAT_PX;
   }
   function noteBoundaries(){const bs=[0];let b=0;melody.forEach(n=>{b+=4/n.durMul;bs.push(b);});return bs;}
-  function snapBeat(t){ // 吸附到最近的音符边界(和弦一律落在音符边界上,保证对齐)
-    const bs=noteBoundaries();if(!bs.length)return Math.round(t);
+  function snapBeat(t){ // 旋律范围内吸音符边界;超出末尾则按整拍网格,以便无限往后拖
+    const bs=noteBoundaries();const mB=melodyBeats();
+    if(t>mB+0.25){ // 已到旋律之后:按拍取整,不再拉回
+      return Math.max(mB,Math.round(t));
+    }
+    if(!bs.length)return Math.round(t);
     let best=bs[0],bd=Math.abs(bs[0]-t);
     bs.forEach(x=>{const d=Math.abs(x-t);if(d<bd){bd=d;best=x;}});
     return best;
