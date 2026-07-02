@@ -115,10 +115,40 @@
   /* ══ 意识流 · 旋律之河 ══ */
   .stream{
     flex-shrink:0;padding:14px 16px;min-height:82px;position:relative;overflow:hidden;
-    display:flex;align-items:center;flex-wrap:nowrap;gap:7px;
+    display:flex;align-items:center;flex-wrap:nowrap;gap:2px;
     overflow-x:auto;scrollbar-width:none;
+    -webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain;
   }
   .stream::-webkit-scrollbar{display:none;}
+  /* 插入光标(点音符缝隙定位) */
+  /* 插入光标:细紫线(录入落点),点缝隙定位 */
+  .ins-caret{flex:0 0 auto;width:6px;align-self:stretch;margin:5px 0;cursor:pointer;position:relative;z-index:3;background:transparent;transition:background .15s;}
+  .ins-caret:hover{background:rgba(167,139,250,0.18);border-radius:3px;}
+  .ins-caret.on{width:2.5px;background:linear-gradient(180deg,var(--primary-soft),rgba(167,139,250,0.4));
+    box-shadow:0 0 7px rgba(167,139,250,0.8);border-radius:2px;animation:caretBlink 1.1s ease-in-out infinite;}
+  .ins-caret.on::after{content:'✎';position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--primary-soft);}
+  @keyframes caretBlink{0%,100%{opacity:1}50%{opacity:0.45}}
+  /* 播放起点标记:绿色小旗(底部),独立于插入光标,可拖动 */
+  .playhead-bar{position:absolute;bottom:2px;top:auto;width:2px;height:60%;z-index:7;border-radius:2px;cursor:grab;
+    touch-action:none;-webkit-user-select:none;user-select:none;
+    background:linear-gradient(180deg,rgba(52,211,153,0.3),var(--accent));}
+  .playhead-bar .ph-head{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);width:0;height:0;
+    border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:8px solid var(--accent);
+    filter:drop-shadow(0 0 3px rgba(52,211,153,0.9));pointer-events:none;}
+  .playhead-bar .ph-grip{position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:26px;height:calc(100% + 12px);border-radius:13px;}
+  .playhead-bar.grab{width:3px;background:var(--accent);box-shadow:0 0 16px rgba(52,211,153,1);}
+  /* 漂浮气泡:旋律框内置灰缓漂,点一下填入光标处 */
+  .float-bub{position:absolute;z-index:4;min-width:30px;height:30px;padding:0 8px;border-radius:15px;cursor:pointer;
+    font-family:var(--font);font-size:14px;font-weight:600;color:var(--fg-dim);
+    background:rgba(167,139,250,0.13);border:1px solid rgba(167,139,250,0.3);backdrop-filter:blur(4px);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 8px rgba(0,0,0,0.15);animation:bubFloat 3.4s ease-in-out infinite;transition:transform .12s,background .15s;}
+  .float-bub.out{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.3);color:#a7f3d0;}
+  .float-bub:active{transform:scale(0.85);background:var(--primary);color:#fff;}
+  .float-bub.fly{animation:bubFly .24s ease-in forwards;}
+  @keyframes bubFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+  @keyframes bubFly{to{opacity:0;transform:scale(0.4);}}
+  body.try-on .stream{box-shadow:inset 0 0 0 1.5px rgba(52,211,153,0.4);}
   .stream::before{content:'';position:absolute;left:0;right:0;top:50%;height:1px;transform:translateY(-50%);
     background:linear-gradient(90deg,transparent,rgba(167,139,250,0.2),rgba(52,211,153,0.16),transparent);opacity:0.5;z-index:0;}
   /* 背景旋律线 · 淡淡的音高波动 */
@@ -157,6 +187,10 @@
   .note-chip.playhead{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.6);}
   .note-chip.playhead::before{content:'▶';position:absolute;left:-13px;top:50%;transform:translateY(-50%);font-size:9px;color:#fff;opacity:0.85;}
   .note-chip.rest{background:var(--glass-2);color:var(--fg-muted);border-style:dashed;border-color:var(--glass-brd);font-size:12px;}
+  /* 延音:与音符同色系(紫),视觉上"连"住前一个音,实心不虚线 */
+  .note-chip.tie{background:linear-gradient(135deg,rgba(124,58,237,0.55),rgba(99,102,241,0.4));
+    border:1px solid rgba(167,139,250,0.5);color:#fff;justify-content:center;margin-left:-3px;}
+  .note-chip.tie .nl{font-size:20px;opacity:0.95;letter-spacing:2px;font-weight:700;}
   .note-chip.rest .dur-tail{background:linear-gradient(90deg,rgba(180,175,210,0.4),rgba(180,175,210,0.08));}
   .note-chip.out-chip{background:rgba(52,211,153,0.16);border-color:rgba(52,211,153,0.4);color:#a7f3d0;}
   /* 虚位格子:表示小节里尚未填入的拍 */
@@ -169,13 +203,16 @@
   .bar-line .mtick{position:absolute;top:-2px;left:4px;font-size:8px;color:var(--fg-muted);font-weight:600;opacity:0.6;white-space:nowrap;}
 
   /* ══ TRANSPORT ══ */
-  .transport{flex-shrink:0;display:flex;align-items:center;gap:11px;padding:11px 14px;}
+  .transport{flex-shrink:0;display:flex;align-items:center;gap:10px;padding:11px 14px;flex-wrap:wrap;}
+  .transport.compact{padding:6px 10px;gap:8px;}
+  .transport.compact .speed{max-width:170px;}
   .btn-icon{
     width:42px;height:42px;border-radius:50%;border:1px solid var(--glass-brd);cursor:pointer;
     font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
     color:var(--fg);background:var(--glass);backdrop-filter:blur(10px);
     transition:transform .12s,box-shadow .18s,background .18s;
   }
+  .transport.compact .btn-icon{width:34px;height:34px;font-size:13px;}
   .btn-icon:active{transform:scale(0.9);}
   .btn-play{background:linear-gradient(135deg,var(--primary),var(--secondary));border-color:transparent;box-shadow:var(--glow-p);color:#fff;}
   .btn-play.playing{background:linear-gradient(135deg,#fb7185,var(--danger));box-shadow:0 0 22px rgba(248,113,113,0.55);}
@@ -251,9 +288,12 @@
   @keyframes rippleOut{to{transform:translate(-50%,-50%) scale(4);opacity:0;}}
 
   .rest-row{display:flex;justify-content:center;align-items:center;gap:10px;}
-  .note-btn.rest{flex:0 0 auto;width:150px;height:42px;border-radius:var(--r-sm);color:var(--fg-dim);font-size:13px;font-weight:600;
+  .note-btn.rest{flex:0 0 auto;width:110px;height:42px;border-radius:var(--r-sm);color:var(--fg-dim);font-size:13px;font-weight:600;
     background:var(--glass-2);border:1.5px dashed var(--glass-brd);}
   .note-btn.rest.hit,.note-btn.rest:active{background:rgba(124,58,237,0.18);color:var(--primary-soft);border-color:rgba(167,139,250,0.5);}
+  .note-btn.tie{flex:0 0 auto;width:110px;height:42px;border-radius:var(--r-sm);color:var(--primary-soft);font-size:14px;font-weight:700;
+    background:rgba(124,58,237,0.16);border:1px solid rgba(167,139,250,0.45);}
+  .note-btn.tie.hit,.note-btn.tie:active{background:rgba(124,58,237,0.32);color:#fff;}
   .rest-row .rk{font-size:9.5px;color:var(--fg-muted);}
 
   /* ══ KB HINT ══ */
@@ -386,29 +426,55 @@
   body.is-mobile .actions button{padding:10px 12px;font-size:12px;flex:1 1 0;}
   body.is-mobile .content{gap:9px;}
 
-  /* ══ 面板切换 tabs(仅移动端) ══ */
-  .panel-tabs{display:none;gap:6px;padding:4px;background:var(--glass-2);border:1px solid var(--glass-brd-soft);border-radius:var(--r-md);flex-shrink:0;}
-  body.is-mobile .panel-tabs{display:flex;}
-  .ptab{flex:1 1 0;border:none;background:transparent;color:var(--fg-dim);font-family:var(--font);
-    font-size:13px;font-weight:600;padding:10px;border-radius:var(--r-sm);cursor:pointer;transition:all .2s;
-    display:flex;align-items:center;justify-content:center;gap:6px;}
-  .ptab.sel{background:linear-gradient(135deg,var(--primary),var(--secondary));color:#fff;box-shadow:var(--glow-p);}
+  /* 速度步进 + 拍号(两区共用) */
+  .tempo{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+  .tempo-btn{width:26px;height:26px;border-radius:8px;border:1px solid var(--glass-brd);background:var(--glass);
+    color:var(--fg);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;transition:all .12s;}
+  .tempo-btn:active{transform:scale(0.9);background:var(--primary);color:#fff;}
+  .tempo-val{display:flex;flex-direction:column;align-items:center;line-height:1;min-width:38px;}
+  .tempo-val input{width:38px;text-align:center;background:transparent;border:none;border-bottom:1px solid transparent;
+    font-family:var(--font);font-size:14px;font-weight:700;color:var(--primary-soft);font-variant-numeric:tabular-nums;outline:none;padding:0;}
+  .tempo-val input:focus{border-bottom-color:var(--primary-soft);}
+  .tempo-val small{font-size:7px;color:var(--fg-muted);letter-spacing:0.5px;}
+  .legend-loop{margin-left:auto;} /* 与右侧箭头成组 */
+  .track-legend .score-nav{margin-left:6px;}
+  .ts-inline{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--fg-muted);font-weight:600;flex-shrink:0;}
+  .ts-inline select{appearance:none;-webkit-appearance:none;background:var(--glass);color:var(--fg);
+    border:1px solid var(--glass-brd);border-radius:7px;padding:5px 8px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;outline:none;}
+  .ts-inline select option{background:#1a1830;}
+  .try-switch input:checked+.loop-track{background:linear-gradient(135deg,var(--accent),var(--accent-deep));border-color:transparent;box-shadow:var(--glow-a);}
+  body.is-desktop .mob-tempo{display:none;} /* 桌面用大滑条 */
+  body.is-desktop .transport.compact{flex-wrap:nowrap;} /* 桌面全挤一行 */
+  /* 桌面速度大滑条(在播放条内,占满剩余宽度) */
+  .speed-inline{align-items:center;gap:10px;flex:1 1 0;min-width:0;}
+  .speed-inline input[type=range]{flex:1 1 0;min-width:0;height:6px;-webkit-appearance:none;appearance:none;border-radius:3px;outline:none;
+    background:linear-gradient(90deg,var(--primary),var(--secondary));}
+  .speed-inline input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#fff,var(--primary-soft));cursor:pointer;border:none;box-shadow:var(--glow-p);}
+  .speed-inline .speed-bpm{font-size:13px;color:var(--fg-dim);flex-shrink:0;min-width:52px;text-align:right;}
+  .speed-inline .speed-bpm::after{content:' BPM';font-size:9px;color:var(--fg-muted);}
+  .speed-inline .speed-bpm b{color:var(--primary-soft);font-weight:700;font-variant-numeric:tabular-nums;}
+  body.is-desktop .speed-inline{display:flex;}
 
   /* ══ 乐谱区:旋律轨 + 和弦轨,对齐 + 吸顶居中(两端通用) ══ */
   .score-head{position:sticky;top:0;z-index:30;display:flex;flex-direction:column;gap:7px;
     padding:4px 0 8px;margin:0 auto;width:100%;
     background:linear-gradient(180deg,rgba(11,11,26,0.72) 78%,rgba(11,11,26,0));
     backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);}
+  /* 点击哪个轨,哪个轨高亮为当前编辑对象 */
+  #melodyBox,.chord-track{transition:box-shadow .2s;}
+  body.focus-chord .chord-track{box-shadow:0 0 0 2px var(--primary),0 4px 16px rgba(124,58,237,0.3);border-radius:var(--r-md);}
+  body.focus-melody #melodyBox{box-shadow:0 0 0 2px rgba(167,139,250,0.5);}
 
-  /* 工具区:桌面左右并排,移动端 tab 切换 */
+  /* 工具区:桌面左右并排(音符7:和弦3),移动端按聚焦切换 */
   .tools{display:flex;flex-direction:column;gap:11px;}
   .melody-panel{display:flex;flex-direction:column;gap:11px;}
   .chord-panel{display:flex;flex-direction:column;gap:11px;}
   body.is-desktop .tools{flex-direction:row;align-items:flex-start;gap:16px;}
-  body.is-desktop .melody-panel,body.is-desktop .chord-panel{flex:1 1 0;min-width:0;}
-  body.is-desktop .melody-panel{border-right:1px solid var(--glass-brd-soft);padding-right:16px;}
-  body.is-mobile.panel-melody .chord-panel{display:none;}
-  body.is-mobile.panel-chord .melody-panel{display:none;}
+  body.is-desktop .melody-panel{flex:78 1 0;min-width:0;border-right:1px solid var(--glass-brd-soft);padding-right:16px;}
+  body.is-desktop .chord-panel{flex:22 1 0;min-width:0;}
+  body.is-mobile.focus-melody .chord-panel{display:none;}
+  body.is-mobile.focus-chord .melody-panel{display:none;}
 
   /* ══ 拍号 / 段落选择器 ══ */
   .ts-row{display:flex;gap:9px;}
@@ -421,28 +487,41 @@
   .chord-track{position:relative;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;height:60px;}
   .chord-track::-webkit-scrollbar{display:none;}
   .chord-inner{position:relative;height:100%;min-width:100%;}
-  .measure-slot{position:absolute;top:3px;bottom:3px;border-radius:var(--r-md);cursor:pointer;overflow:hidden;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 4px;
-    border:1px solid var(--glass-brd);background:var(--glass-2);transition:box-shadow .2s,filter .15s;}
-  .measure-slot:active{filter:brightness(0.92);}
-  .measure-slot .mnum{position:absolute;top:4px;left:7px;font-size:8px;color:var(--fg-muted);font-weight:600;opacity:0.7;}
-  .measure-slot .cname{font-size:18px;font-weight:700;line-height:1;letter-spacing:0.3px;}
-  .measure-slot .croman{font-size:9px;font-weight:500;opacity:0.75;letter-spacing:0.5px;}
-  .measure-slot.empty{border-style:dashed;color:var(--fg-muted);}
-  .measure-slot.empty .cname{font-size:22px;font-weight:300;opacity:0.5;}
-  .measure-slot.playing{box-shadow:0 0 0 2px var(--fg),0 0 18px rgba(255,255,255,0.3);filter:brightness(1.15);}
-  /* 和声功能配色:主功能=暖琥珀 / 下属=绿松 / 属=紫 */
-  .measure-slot.func-T{background:linear-gradient(150deg,rgba(224,164,75,0.32),rgba(224,164,75,0.14));border-color:rgba(224,164,75,0.5);color:#f6d9a8;}
-  .measure-slot.func-T .cname{color:#f2c479;}
-  .measure-slot.func-SD{background:linear-gradient(150deg,rgba(52,211,153,0.3),rgba(52,211,153,0.12));border-color:rgba(52,211,153,0.5);color:#a7f3d0;}
-  .measure-slot.func-SD .cname{color:#6ee7b7;}
-  .measure-slot.func-D{background:linear-gradient(150deg,rgba(167,139,250,0.34),rgba(124,58,237,0.16));border-color:rgba(167,139,250,0.5);color:#c9b8fc;}
-  .measure-slot.func-D .cname{color:#c4b5fd;}
+  /* 小节参考竖线 */
+  .cbar{position:absolute;top:0;bottom:0;width:1px;background:rgba(167,139,250,0.14);pointer-events:none;}
+  /* 和弦块(时间轴 clip) */
+  /* 和弦块:起点清晰(左),向右渐隐 */
+  .chord-clip{position:absolute;top:3px;bottom:3px;border-radius:8px;cursor:grab;overflow:hidden;touch-action:none;
+    display:flex;align-items:center;padding:0 6px 0 12px;box-sizing:border-box;transition:filter .15s;}
+  .chord-clip:active{cursor:grabbing;}
+  .chord-clip .cname{font-size:17px;font-weight:700;line-height:1;letter-spacing:0.3px;position:relative;z-index:2;pointer-events:none;}
+  /* 左侧起点实心竖条 */
+  .chord-clip .cc-start{position:absolute;left:0;top:0;bottom:0;width:4px;border-radius:8px 0 0 8px;z-index:2;pointer-events:none;}
+  .chord-clip.playing{filter:brightness(1.25);}
+  .chord-clip.playing .cc-start{box-shadow:0 0 12px currentColor;}
+  /* 渐隐背景(左实右透) */
+  .chord-clip.func-T{background:linear-gradient(90deg,rgba(224,164,75,0.5),rgba(224,164,75,0.03));color:#f2c479;}
+  .chord-clip.func-T .cc-start{background:#e0a44b;}
+  .chord-clip.func-SD{background:linear-gradient(90deg,rgba(52,211,153,0.48),rgba(52,211,153,0.03));color:#6ee7b7;}
+  .chord-clip.func-SD .cc-start{background:#34d399;}
+  .chord-clip.func-D{background:linear-gradient(90deg,rgba(167,139,250,0.5),rgba(124,58,237,0.03));color:#c4b5fd;}
+  .chord-clip.func-D .cc-start{background:#a78bfa;}
+  /* 位置光标 */
+  .chord-caret{position:absolute;top:1px;bottom:1px;width:2px;z-index:5;background:linear-gradient(180deg,var(--primary-soft),var(--accent));
+    box-shadow:0 0 8px rgba(167,139,250,0.9);animation:caretBlink 1.1s ease-in-out infinite;}
+  .chord-caret .cc-tip{position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:8px;color:var(--primary-soft);white-space:nowrap;}
+  .chord-caret.ghost{background:rgba(167,139,250,0.4);box-shadow:none;animation:none;width:2px;} /* 下一个顺序插入位,淡 */
+  body.resizing{cursor:grabbing;}
+  /* 和弦插入光标(细线 + 加宽透明热区便于点) */
+  .cchip-caret{position:absolute;top:2px;bottom:2px;width:10px;margin-left:-4px;background:transparent;cursor:pointer;z-index:4;}
+  .cchip-caret::before{content:'';position:absolute;left:4px;top:0;bottom:0;width:2px;background:transparent;border-radius:2px;}
+  .cchip-caret:hover::before{background:rgba(167,139,250,0.4);}
+  .cchip-caret.on::before{background:linear-gradient(180deg,var(--primary-soft),var(--accent));box-shadow:0 0 7px rgba(167,139,250,0.8);animation:caretBlink 1.1s ease-in-out infinite;}
   .track-legend{display:flex;gap:12px;justify-content:center;font-size:9.5px;color:var(--fg-muted);flex-wrap:wrap;}
   .track-legend span{display:inline-flex;align-items:center;gap:4px;}
   .track-legend i{width:9px;height:9px;border-radius:3px;}
   .track-legend .lg-T{background:#e0a44b;}.track-legend .lg-SD{background:#34d399;}.track-legend .lg-D{background:#a78bfa;}
-  .score-nav{margin-left:auto;display:flex;gap:6px;}
+  .score-nav{display:flex;gap:6px;}
   .score-nav button{width:26px;height:22px;border-radius:7px;border:1px solid var(--glass-brd);
     background:var(--glass);color:var(--fg-dim);font-size:10px;cursor:pointer;transition:all .15s;
     display:flex;align-items:center;justify-content:center;padding:0;}
@@ -452,7 +531,11 @@
   .chord-pal-label{font-size:9.5px;color:var(--fg-muted);letter-spacing:2px;text-transform:uppercase;font-weight:600;padding-left:4px;display:flex;align-items:center;gap:8px;}
   .chord-pal-label .tip{font-size:9px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--fg-dim);background:var(--glass);border:1px solid var(--glass-brd-soft);border-radius:6px;padding:1px 7px;}
   .chord-pal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  @media(min-width:700px){.chord-pal{grid-template-columns:repeat(7,1fr);}}
+  /* 桌面:和弦区窄列,竖排一列 */
+  body.is-desktop .chord-pal{grid-template-columns:repeat(2,1fr);gap:9px;}
+  body.is-desktop .chord-btn{flex-direction:column;justify-content:center;gap:3px;padding:11px 10px;height:auto;min-height:50px;}
+  body.is-desktop .chord-btn .cn{font-size:18px;}
+  body.is-desktop .chord-btn .rn{font-size:10.5px;}
   .chord-btn{position:relative;overflow:hidden;border:none;font-family:var(--font);cursor:pointer;border-radius:var(--r-md);
     padding:11px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
     transition:transform .1s cubic-bezier(.34,1.56,.64,1),filter .15s,box-shadow .2s;}
@@ -565,41 +648,51 @@
           <span><i class="lg-SD"></i>下属</span>
           <span><i class="lg-D"></i>属</span>
           <span class="tip" id="ctInfo"></span>
+          <label class="loop legend-loop"><input type="checkbox" id="loopCheck"><span class="loop-track"></span><span class="loop-lbl">循环</span></label>
           <span class="score-nav"><button id="scrollL" aria-label="向左">◀</button><button id="scrollR" aria-label="向右">▶</button></span>
         </div>
       </div>
     </div>
 
-    <div class="transport panel">
+    <div class="transport panel compact">
       <button class="btn-icon btn-play" id="btnPlay" aria-label="播放">▶</button>
       <button class="btn-icon" id="btnStop" aria-label="停止">■</button>
-      <div class="speed">
-        <label>速度</label>
-        <input type="range" id="speedSlider" min="60" max="200" value="120" aria-label="速度">
-        <span class="bpm" id="bpmVal">120</span>
+      <!-- 速度:移动端紧凑步进 / 桌面端大滑条(同一行) -->
+      <div class="tempo mob-tempo">
+        <button class="tempo-btn" id="tempoDown" aria-label="减速">−</button>
+        <span class="tempo-val"><input id="bpmVal" type="text" inputmode="numeric" value="120" aria-label="速度BPM"><small>BPM</small></span>
+        <button class="tempo-btn" id="tempoUp" aria-label="加速">+</button>
       </div>
-      <label class="loop">
-        <input type="checkbox" id="loopCheck">
-        <span class="loop-track"></span>
-        <span class="loop-lbl">循环</span>
+      <div class="speed-inline desk-only">
+        <input type="range" id="speedSlider" min="60" max="200" value="120" aria-label="速度">
+        <span class="speed-bpm"><b id="bpmValD">120</b></span>
+      </div>
+      <!-- 拍号:两区共用 -->
+      <label class="ts-inline">拍号
+        <select id="tsSelect">
+          <option value="4/4">4/4</option>
+          <option value="3/4">3/4</option>
+          <option value="6/8">6/8</option>
+          <option value="2/4">2/4</option>
+        </select>
       </label>
-    </div>
-
-    <div class="panel-tabs">
-      <button class="ptab sel" data-panel="melody">🎵 旋律</button>
-      <button class="ptab" data-panel="chord">🎸 和弦</button>
+      <!-- 试音开关(单一开关,替代 tab):开=只发声不录入 -->
+      <label class="loop try-switch">
+        <input type="checkbox" id="tryCheck">
+        <span class="loop-track"></span>
+        <span class="loop-lbl">试音</span>
+      </label>
     </div>
 
     <div class="tools">
     <div class="melody-panel">
     <div class="ctrls">
       <div class="seg-block">
-        <div class="seg-title">时值</div>
+        <div class="seg-title">时值 <span class="k">长音用延音 — 拼</span></div>
         <div class="seg panel" id="rhythmRow">
           <button class="sel" data-dur="4">♩ 四分</button>
           <button data-dur="8">♪ 八分</button>
           <button data-dur="16">♬ 十六分</button>
-          <button data-dur="4.">♩. 附点</button>
         </div>
       </div>
       <div class="seg-block desk-only">
@@ -623,8 +716,9 @@
         <div class="note-row" id="outKeyRow"></div>
       </div>
       <div class="rest-row">
-        <button class="note-btn rest" id="restBtn">— 休止符</button>
-        <span class="rk">空格键</span>
+        <button class="note-btn tie" id="tieBtn">— 延音</button>
+        <button class="note-btn rest" id="restBtn">0 休止</button>
+        <span class="rk">延音 空格 · 休止 0</span>
       </div>
     </div>
 
@@ -641,7 +735,8 @@
         <div class="oct-cards" id="octCards"></div>
       </div>
       <div class="mpad-foot">
-        <button class="btn-rest-m" id="restBtnM">— 休止符</button>
+        <button class="btn-rest-m" id="tieBtnM">— 延音</button>
+        <button class="btn-rest-m" id="restBtnM">0 休止</button>
       </div>
     </div>
 
@@ -649,7 +744,8 @@
       <span><kbd>1</kbd>–<kbd>7</kbd> 调内</span>
       <span><kbd>⇧</kbd>+<kbd>1</kbd>–<kbd>5</kbd> 调外</span>
       <span><kbd>←</kbd><kbd>→</kbd> 音区</span>
-      <span><kbd>空格</kbd> 休止</span>
+      <span><kbd>空格</kbd> 延音</span>
+      <span><kbd>0</kbd> 休止</span>
       <span><kbd>Enter</kbd> 播放</span>
       <span><kbd>⌫</kbd> 撤销</span>
     </div>
@@ -657,33 +753,13 @@
 
     <!-- 和弦编配面板 -->
     <div class="chord-panel">
-      <div class="ts-row">
-        <div class="ts-block">
-          <div class="seg-title">拍号</div>
-          <div class="seg panel" id="tsRow">
-            <button class="sel" data-ts="4/4">4/4</button>
-            <button data-ts="3/4">3/4</button>
-            <button data-ts="6/8">6/8</button>
-            <button data-ts="2/4">2/4</button>
-          </div>
-        </div>
-        <div class="ts-block">
-          <div class="seg-title">段落</div>
-          <div class="seg panel" id="sectionRow">
-            <button class="sel" data-sec="verse">主歌</button>
-            <button data-sec="chorus">副歌</button>
-            <button data-sec="bridge">桥段</button>
-          </div>
-        </div>
-      </div>
-
       <div class="chord-opts">
-        <label class="anchor-toggle"><input type="checkbox" id="anchorChk"><span class="loop-track"></span><span class="loop-lbl">自由锚点</span></label>
         <button class="mini-btn" id="btnProg">🎼 套路</button>
         <button class="mini-btn" id="btnChordPlay">▶ 试听进行</button>
+        <button class="mini-btn" id="btnChordClear">清空和弦</button>
       </div>
       <div>
-        <div class="chord-pal-label in"><span id="palHint">当前调和弦 · 点选填入选中小节</span><span class="tip">长按加花</span></div>
+        <div class="chord-pal-label in"><span id="palHint">点和弦=填入(不选位置默认每小节一个)</span><span class="tip">长按加花 · 拖左边缘移位</span></div>
         <div class="chord-pal" id="chordPal"></div>
       </div>
     </div>
@@ -792,13 +868,14 @@
   // ═══ 状态 ═══
   let melody=[],key='C',playing=false,timer=null,active=-1,rhythmDur=4,octave=0;
   let curIn=[],curOut=[],inBtns=[],outBtns=[];
-  let playStart=-1; // 播放起点(-1=从头)
+  let caret=0;      // 插入光标(0..length):跟随录入
+  let playStart=0;  // 播放起点(0..length):独立,默认开头,不跟随录入
   const BEAT_PX=46;  // 每拍像素宽,音符宽度=时值拍数×此值
-  function getDurMul(){return rhythmDur==='4.'?4.5:(typeof rhythmDur==='string'?parseFloat(rhythmDur):rhythmDur);}
+  function getDurMul(){return typeof rhythmDur==='string'?parseFloat(rhythmDur):rhythmDur;}
 
   const $=s=>document.getElementById(s);
   const keySel=$('keySelect'),melodyBox=$('melodyBox');
-  const inKeyRow=$('inKeyRow'),outKeyRow=$('outKeyRow'),restBtn=$('restBtn');
+  const inKeyRow=$('inKeyRow'),outKeyRow=$('outKeyRow'),restBtn=$('restBtn'),tieBtn=$('tieBtn');
   const btnPlay=$('btnPlay'),btnStop=$('btnStop'),speedSlider=$('speedSlider'),bpmVal=$('bpmVal'),loopCheck=$('loopCheck');
   const btnUndo=$('btnUndo'),btnClear=$('btnClear'),btnAI=$('btnAI'),toast=$('toast');
   const aiOverlay=$('aiOverlay'),aiCard=$('aiCard');
@@ -937,36 +1014,81 @@
   }
 
   // ═══ 音符操作 ═══
-  function add(note,label,inKey){audio();const f=freq(note);melody.push({note,label,freq:f,inKey,durMul:getDurMul()});playGuitar(f,280);renderMelody();}
-  function addRest(){melody.push({note:null,label:'—',freq:0,inKey:false,durMul:getDurMul(),rest:true});renderMelody();flash('休止符');}
+  //  caret:统一光标(插入位置=播放起点);tryMode:试音模式;recentPool:漂浮气泡(最多3个)
+  let tryMode=false,recentPool=[];
+  function pushRecent(note,label,inKey){
+    recentPool=recentPool.filter(r=>r.note!==note); // 去重,最近的排最前
+    recentPool.unshift({note,label,freq:freq(note),inKey});
+    if(recentPool.length>3)recentPool.pop();
+    renderRecentBubbles();
+  }
+  function insertItem(item){ // 插入到光标处,光标自动后移到新音之后
+    const p=Math.max(0,Math.min(caret,melody.length));
+    melody.splice(p,0,item);caret=p+1;
+  }
+  function add(note,label,inKey){
+    audio();const f=freq(note);
+    pushRecent(note,label,inKey); // 无论哪种模式,都记入"最近常点"
+    if(tryMode){playGuitar(f,280);return;} // 试音:只发声,不录入
+    insertItem({note,label,freq:f,inKey,durMul:getDurMul()});
+    playGuitar(f,280);renderMelody();
+  }
+  function addRest(){
+    if(tryMode){flash('试音模式不录入');return;}
+    insertItem({note:null,label:'0',freq:0,inKey:false,durMul:getDurMul(),rest:true});
+    renderMelody();flash('休止符');
+  }
+  function addTie(){ // 延音:按当前时值延长前一个音(四分=1拍,八分=0.5拍,十六分=0.25拍)
+    if(tryMode){flash('试音模式不录入');return;}
+    const prev=melody[Math.max(0,caret-1)];
+    if(caret===0||!prev||prev.rest){flash('延音要接在音符后');return;}
+    const dm=getDurMul();
+    insertItem({note:null,label:'—',freq:0,inKey:false,durMul:dm,tie:true});
+    renderMelody();flash('延音 +'+(4/dm)+'拍');
+  }
+  function commitRecent(k,bubbleEl){ // 点漂浮气泡→飞入光标处
+    const t=recentPool[k];if(!t)return;
+    insertItem({note:t.note,label:t.label,freq:t.freq,inKey:t.inKey,durMul:getDurMul()});
+    playGuitar(t.freq,280);
+    if(bubbleEl){bubbleEl.classList.add('fly');setTimeout(()=>renderMelody(),240);}else renderMelody();
+  }
 
   function noteBeats(n){return 4/n.durMul;}
-  function delNote(i){if(playing)return;melody.splice(i,1);if(playStart>i)playStart--;else if(playStart===i)playStart=-1;renderMelody();}
+  function delNote(i){if(playing)return;melody.splice(i,1);
+    if(caret>i)caret--;caret=Math.max(0,Math.min(caret,melody.length));
+    if(playStart>i)playStart--;playStart=Math.max(0,Math.min(playStart,melody.length));
+    renderMelody();flash('已删除');}
   function addMeasureTick(num){const b=document.createElement('span');b.className='bar-line';b.innerHTML='<span class="mtick">'+num+'</span>';melodyBox.appendChild(b);}
+  // 缝隙:点击把光标移到这里
+  function makeCaret(pos){const c=document.createElement('span');c.className='ins-caret'+(pos===caret?' on':'');
+    c.addEventListener('click',ev=>{ev.stopPropagation();caret=pos;renderMelody();});return c;}
 
   function renderMelody(){
     melodyBox.innerHTML='';
-    if(!melody.length){const s=document.createElement('span');s.className='stream-empty';s.textContent='让思绪流淌 · 点击音符或按 1–7 开始…';melodyBox.appendChild(s);return;}
+    if(!melody.length){const s=document.createElement('span');s.className='stream-empty';s.textContent='让思绪流淌 · 点击音符或按 1–7 开始…';melodyBox.appendChild(s);
+      if(typeof renderChordTrack==='function')renderChordTrack();return;}
     const mL=(typeof measureLen==='function')?measureLen():4;
     let mbeat=0,mcur=0;
     addMeasureTick(1);
+    melodyBox.appendChild(makeCaret(0));
     melody.forEach((n,i)=>{
       const mm=Math.floor(mbeat/mL+1e-6);
       if(i>0&&mm!==mcur){addMeasureTick(mm+1);mcur=mm;}
       const beats=noteBeats(n);
       const chip=document.createElement('span');chip.className='note-chip';
-      chip.style.width=Math.max(26,beats*BEAT_PX)+'px';
+      chip.style.width=Math.max(24,beats*BEAT_PX)+'px';
       if(i===active)chip.classList.add('active');
-      if(i===playStart)chip.classList.add('playhead');
-      if(n.rest)chip.classList.add('rest');else if(!n.inKey)chip.classList.add('out-chip');
-      chip.innerHTML='<span class="nl">'+n.label+'</span>'+(beats>=1?'<span class="dur-tail"></span>':'');
-      chip.title=(n.rest?'休止符':n.note)+' · '+beatName(n.durMul)+' — 点击设为播放起点,长按删除';
+      if(n.tie)chip.classList.add('tie');else if(n.rest)chip.classList.add('rest');else if(!n.inKey)chip.classList.add('out-chip');
+      chip.innerHTML='<span class="nl">'+n.label+'</span>'+(!n.tie&&beats>=1?'<span class="dur-tail"></span>':'');
+      chip.title=(n.tie?'延音':n.rest?'休止符':n.note+' · '+beatName(n.durMul))+' — 点击删除';
       chipInteract(chip,i);
       melodyBox.appendChild(chip);
+      melodyBox.appendChild(makeCaret(i+1));
       mbeat+=beats;
     });
-    // 末尾虚位:补满当前小节 + 与和弦轨小节数对齐,让用户看到还剩几拍
-    const needMeasures=Math.max((typeof measureCount==='function'?measureCount():4),Math.ceil(mbeat/mL||1));
+    // 末尾虚位:补满当前小节 + 与和弦轨小节数对齐
+    const chB=chords.length?(chords[chords.length-1].at+mL):0;
+    const needMeasures=Math.max(4,Math.ceil(mbeat/mL||1),Math.ceil(chB/mL||1));
     const targetBeats=needMeasures*mL;
     let gb=mbeat,gm=Math.floor(mbeat/mL+1e-6);
     while(gb<targetBeats-1e-6){
@@ -976,35 +1098,93 @@
       melodyBox.appendChild(g);gb+=1;
     }
     drawMelodyLine();
-    if(typeof renderChordTrack==='function')renderChordTrack(); // 小节数随旋律更新
-    if(!playing)melodyBox.scrollLeft=melodyBox.scrollWidth;
+    renderPlayhead();
+    renderRecentBubbles();
+    if(typeof renderChordTrack==='function')renderChordTrack();
+    // 滚动锚定"最后一个音符",而非空拍末尾(未填满时不必滚到底)
+    if(!playing)scrollToLastNote();
+  }
+  function scrollToLastNote(){
+    const chips=melodyBox.querySelectorAll('.note-chip');
+    if(!chips.length){melodyBox.scrollLeft=0;return;}
+    const last=chips[chips.length-1];
+    const target=last.offsetLeft+last.offsetWidth-melodyBox.clientWidth+40;
+    melodyBox.scrollLeft=Math.max(0,target);
   }
 
-  function beatName(d){return d===16?'十六分':d===8?'八分':d==='4.'||d===4.5?'附点四分':'四分';}
+  function beatName(d){return d===16?'十六分':d===8?'八分':'四分';}
 
-  // 音符交互:
-  //  · 自由锚点模式:点击音符 = 在此处加/改和弦锚点(旋律不可编辑)
-  //  · 普通模式:轻点=设播放起点;长按=删除
+  // 音符交互:锚点态=加/改和弦;其余(录入/试音)点击=删除
   function chipInteract(chip,i){
-    let lp=null,fired=false,px=0,py=0;
-    chip.addEventListener('pointerdown',e=>{if(playing)return;fired=false;px=e.clientX;py=e.clientY;
-      if(anchorMode)return; // 锚点模式禁止删除
-      lp=setTimeout(()=>{fired=true;if(navigator.vibrate)navigator.vibrate(12);delNote(i);},480);});
-    chip.addEventListener('pointermove',e=>{if(lp&&Math.hypot(e.clientX-px,e.clientY-py)>9){clearTimeout(lp);lp=null;}});
-    chip.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;}if(playing)return;
-      if(anchorMode){const ex=anchors.findIndex(a=>a.ni===i);if(ex>=0)openAnchorEdit(ex);else openChordPicker(i);return;}
-      if(!fired){playStart=(playStart===i?-1:i);renderMelody();flash(playStart<0?'从头播放':'从第'+(i+1)+'个音播放');}});
-    chip.addEventListener('pointercancel',()=>{if(lp){clearTimeout(lp);lp=null;}});
+    chip.addEventListener('click',e=>{e.stopPropagation();if(playing)return;delNote(i);});
   }
 
-  // 播放高亮:只移动 active,不重建 DOM;容器匀速平滑跟随
+  // ═══ 播放起点标记(独立于插入光标,默认开头,可拖动) ═══
+  let phBar=null;
+  function gapX(g){ // 第 g 个缝隙的像素 x
+    const chips=melodyBox.querySelectorAll('.note-chip');if(!chips.length)return 0;
+    if(g<=0)return chips[0].offsetLeft;
+    if(g>=chips.length){const last=chips[chips.length-1];return last.offsetLeft+last.offsetWidth;}
+    return chips[g].offsetLeft;
+  }
+  function renderPlayhead(){
+    if(phBar){phBar.remove();phBar=null;}
+    if(!melodyBox.querySelectorAll('.note-chip').length)return;
+    playStart=Math.max(0,Math.min(playStart,melody.length));
+    phBar=document.createElement('div');phBar.className='playhead-bar';
+    phBar.style.left=(gapX(playStart)-1)+'px';
+    phBar.innerHTML='<span class="ph-head"></span><span class="ph-grip"></span>';
+    phBar.title='播放起点(拖动;默认从头)';
+    bindPlayDrag(phBar);
+    melodyBox.appendChild(phBar);
+  }
+  function gapFromX(clientX){
+    const rect=melodyBox.getBoundingClientRect();const x=clientX-rect.left+melodyBox.scrollLeft;
+    const chips=[...melodyBox.querySelectorAll('.note-chip')];
+    let best=0,bd=1e9;
+    for(let g=0;g<=chips.length;g++){
+      const gx=g<chips.length?chips[g].offsetLeft:(chips[chips.length-1].offsetLeft+chips[chips.length-1].offsetWidth);
+      const d=Math.abs(gx-x);if(d<bd){bd=d;best=g;}
+    }
+    return best;
+  }
+  function bindPlayDrag(bar){
+    let dragging=false;
+    bar.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();
+      dragging=true;bar.classList.add('grab');try{bar.setPointerCapture(e.pointerId);}catch(_){}});
+    bar.addEventListener('pointermove',e=>{if(!dragging)return;e.preventDefault();e.stopPropagation();
+      playStart=gapFromX(e.clientX);bar.style.left=(gapX(playStart)-1)+'px';});
+    const end=e=>{if(!dragging)return;dragging=false;bar.classList.remove('grab');
+      if(e){e.stopPropagation();}flash(playStart<=0?'从头播放':playStart>=melody.length?'从末尾':'从第'+(playStart+1)+'个音播放');};
+    bar.addEventListener('pointerup',end);bar.addEventListener('pointercancel',end);
+  }
+
+  // ═══ 漂浮气泡(旋律框内置灰漂浮,点一下填入光标处) ═══
+  function renderRecentBubbles(){
+    melodyBox.querySelectorAll('.float-bub').forEach(b=>b.remove());
+    if(!recentPool.length)return;
+    const maxN=isMobileMode?2:3; // 移动端只飘2个
+    const W=melodyBox.clientWidth||300;
+    recentPool.slice(0,maxN).forEach((r,k)=>{
+      const b=document.createElement('button');b.className='float-bub'+(r.inKey?'':' out');
+      b.textContent=r.label;b.title='填入 '+r.note;
+      b.style.left=(melodyBox.scrollLeft+W-40-k*46)+'px'; // 更靠右后
+      b.style.top=(8+((k%2)*22))+'px';
+      b.style.animationDelay=(k*0.5)+'s';
+      b.addEventListener('click',ev=>{ev.stopPropagation();commitRecent(k,b);});
+      melodyBox.appendChild(b);
+    });
+  }
+
+  // 播放跟随:仅当音符接近视野边缘时轻推滚动(不逐音强制居中,避免卡顿)
   function highlightActive(i){
     const chips=melodyBox.querySelectorAll('.note-chip');
     chips.forEach((c,idx)=>c.classList.toggle('active',idx===i));
     const chip=chips[i];if(!chip)return;
-    const target=chip.offsetLeft-melodyBox.clientWidth*0.42+chip.offsetWidth/2;
-    const max=melodyBox.scrollWidth-melodyBox.clientWidth;
-    melodyBox.scrollTo({left:Math.max(0,Math.min(max,target)),behavior:'smooth'});
+    const left=chip.offsetLeft,right=left+chip.offsetWidth;
+    const vl=melodyBox.scrollLeft,vr=vl+melodyBox.clientWidth;
+    if(right>vr-50)melodyBox.scrollLeft=right-melodyBox.clientWidth+70;
+    else if(left<vl+50)melodyBox.scrollLeft=Math.max(0,left-70);
   }
 
   // ═══ 背景旋律线 · 根据音高画出波动轮廓 ═══
@@ -1049,15 +1229,19 @@
       if(!playing)return;
       if(i>=melody.length){if(loopCheck.checked){i=startI;cumBeats=beatsBefore(startI);lastMeas=-1;}else{stopPlayback();return;}}
       const n=melody[i];active=i;highlightActive(i);
-      if(anchorMode){ // 锚点模式:播到锚点音符时切换和弦
-        const a=anchors.find(x=>x.ni===i);if(a)playChord(a.chord,baseMs*mLen*0.92,true);
-      }else{ // 小节模式:进入新小节弹该小节和弦
-        const meas=Math.floor(cumBeats/mLen+1e-6);
-        if(meas!==lastMeas){lastMeas=meas;highlightMeasure(meas);const ch=chordProg[meas];if(ch)playChord(ch,baseMs*mLen*0.92,true);}
+      // 和弦:按累计拍找到当前和弦块,进入新块时弹奏
+      const ci=chordAtBeat(cumBeats);
+      if(ci!==lastMeas){lastMeas=ci;highlightChordClip(ci);const ch=chords[ci];if(ch){const dur=(chordEndBeat(ci)-ch.at);playChord(ch,baseMs*dur*0.92,true);}}
+      const noteMs=baseMs*noteBeats(n);
+      if(n.tie){
+        // 延音:不重新拨弦,仅延续时间(声音由前一个音的长时值覆盖)
+      }else if(!n.rest){
+        // 计算跟随的延音拍数,合成一个长音
+        let extra=0;for(let j=i+1;j<melody.length&&melody[j].tie;j++)extra+=noteBeats(melody[j]);
+        const soundMs=baseMs*(noteBeats(n)+extra);
+        playGuitar(n.freq,Math.min(soundMs-30,1800));
       }
-      const noteMs=baseMs*(4/n.durMul);
-      if(!n.rest)playGuitar(n.freq,Math.min(noteMs-30,420));
-      cumBeats+=4/n.durMul;
+      cumBeats+=noteBeats(n);
       i++;timer=setTimeout(step,noteMs);
     }
     step();
@@ -1144,8 +1328,11 @@
   const isMinorKey=k=>/m$/.test(k);
   const TS_LEN={'4/4':4,'3/4':3,'6/8':3,'2/4':2}; // 每小节含多少个四分音符拍
 
-  let timeSig='4/4',section='verse',chordProg=[],selMeasure=0;
-  let anchorMode=false,anchors=[]; // 自由锚点:[{ni:音符下标, chord}]
+  let timeSig='4/4',section='verse';
+  // 和弦 = 起点模型:每项 {at:起始拍, rootLetter,rootPC,quality,degree,func,roman,section}
+  // 一个和弦自动延音到下一个和弦起点;不存时长。按 at 升序。
+  let chords=[],selChordAt=null; // selChordAt: 手动选中的插入拍(null=顺序往后)
+  let chordCursor=0; // 顺序插入光标:下一个和弦落在第几小节起点
 
   // L2 经典和弦进行套路(以级数表示,1-based degree)
   const PROGRESSIONS=[
@@ -1185,78 +1372,154 @@
     return[{q:'dim',desc:'减三·不安'},{q:'m7b5',desc:'半减·爵士'},{q:'dim7',desc:'减七·强紧张'}];
   }
 
-  function totalBeats(){return melody.reduce((s,n)=>s+(4/n.durMul),0);}
   function measureLen(){return TS_LEN[timeSig]||4;}
-  function measureCount(){
-    let n=Math.max(4,Math.ceil(totalBeats()/measureLen()));
-    for(let i=chordProg.length-1;i>=0;i--){if(chordProg[i]){n=Math.max(n,i+1);break;}}
-    return n;
+  function melodyBeats(){return melody.reduce((s,n)=>s+(4/n.durMul),0);}
+  function sortChords(){chords.sort((a,b)=>a.at-b.at);}
+  function chordEndBeat(i){ // 延音到下一个和弦起点;最后一个默认管一小节
+    if(i+1<chords.length)return chords[i+1].at;
+    return chords[i].at+measureLen();
   }
-  function syncProg(){const N=measureCount();while(chordProg.length<N)chordProg.push(null);if(chordProg.length>N)chordProg.length=N;if(selMeasure>=N)selMeasure=N-1;}
+  function totalSpan(){return Math.max(melodyBeats(),(chords.length?chords[chords.length-1].at+measureLen():0),measureLen()*4);}
 
-  function slotLongPress(el,chordObj,mIndex){
-    let lp=null,fired=false,px=0,py=0;
-    el.addEventListener('pointerdown',e=>{fired=false;px=e.clientX;py=e.clientY;
-      lp=setTimeout(()=>{fired=true;if(navigator.vibrate)navigator.vibrate(14);
-        openVariants({rootLetter:chordObj.rootLetter,rootPC:chordObj.rootPC,roman:chordObj.roman,func:chordObj.func,degree:chordObj.degree,quality:chordObj.quality},mIndex);},460);});
-    el.addEventListener('pointermove',e=>{if(lp&&Math.hypot(e.clientX-px,e.clientY-py)>10){clearTimeout(lp);lp=null;}});
-    el.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;}if(!fired){selMeasure=mIndex;renderChordTrack();if(chordProg[mIndex])playChord(chordProg[mIndex],600,true);}});
-    el.addEventListener('pointercancel',()=>{if(lp){clearTimeout(lp);lp=null;}});
+  // ═══ 拍↔像素:和弦块与旋律音符对齐 ═══
+  function melodySegs(){
+    const chips=[...melodyBox.querySelectorAll('.note-chip')];const segs=[];let b=0;
+    melody.forEach((n,i)=>{const nb=4/n.durMul,chip=chips[i];
+      if(chip)segs.push({b0:b,b1:b+nb,x0:chip.offsetLeft,x1:chip.offsetLeft+chip.offsetWidth});
+      b+=nb;});
+    return segs;
+  }
+  function beatToX(t,segs){
+    segs=segs||melodySegs();
+    if(!segs.length)return t*BEAT_PX;
+    if(t<=segs[0].b0+1e-6)return segs[0].x0; // 起点=第一个音符左缘
+    // 命中某音符内部(含其左边界)→ 从该音符左缘按比例;边界处正好返回该音符左缘
+    for(const s of segs){if(t<s.b1-1e-6)return s.x0+(t-s.b0)/(s.b1-s.b0)*(s.x1-s.x0);}
+    const last=segs[segs.length-1];
+    if(t<=last.b1+1e-6)return last.x1; // 末尾边界=最后音符右缘
+    return last.x1+(t-last.b1)*BEAT_PX;
+  }
+  function xToBeat(x,segs){
+    segs=segs||melodySegs();
+    if(!segs.length)return x/BEAT_PX;
+    if(x<=segs[0].x0)return 0;
+    for(const s of segs){if(x<s.x1-1e-6)return s.b0+(x-s.x0)/(s.x1-s.x0)*(s.b1-s.b0);}
+    const last=segs[segs.length-1];
+    if(x<=last.x1+1e-6)return last.b1;
+    return last.b1+(x-last.x1)/BEAT_PX;
+  }
+  function noteBoundaries(){const bs=[0];let b=0;melody.forEach(n=>{b+=4/n.durMul;bs.push(b);});return bs;}
+  function snapBeat(t){ // 吸附到最近的音符边界(和弦一律落在音符边界上,保证对齐)
+    const bs=noteBoundaries();if(!bs.length)return Math.round(t);
+    let best=bs[0],bd=Math.abs(bs[0]-t);
+    bs.forEach(x=>{const d=Math.abs(x-t);if(d<bd){bd=d;best=x;}});
+    return best;
   }
 
-  // 计算每个小节在旋律轨中的像素跨度,使和弦格与旋律音符对齐
-  function measureBoxes(){
-    const chips=[...melodyBox.querySelectorAll('.note-chip')];
-    const L=measureLen(),N=chordProg.length;
-    const spans={};let beat=0;
-    melody.forEach((n,idx)=>{
-      const m=Math.floor(beat/L+1e-6),chip=chips[idx];
-      if(chip){const x0=chip.offsetLeft,x1=chip.offsetLeft+chip.offsetWidth;
-        if(!spans[m])spans[m]={x0,x1};else{spans[m].x0=Math.min(spans[m].x0,x0);spans[m].x1=Math.max(spans[m].x1,x1);}}
-      beat+=4/n.durMul;
-    });
-    const boxes=[];let cursor=0;const gap=6,defW=84;
-    for(let m=0;m<N;m++){
-      if(spans[m]){const w=Math.max(44,spans[m].x1-spans[m].x0);boxes[m]={left:spans[m].x0,width:w};cursor=spans[m].x0+w+gap;}
-      else{boxes[m]={left:cursor,width:defW};cursor+=defW+gap;}
-    }
-    return boxes;
+  // 放一个和弦到 at 拍(同位置替换)
+  function placeChord(baseC,atBeat,quality){
+    const at=Math.max(0,atBeat);
+    const c=Object.assign({},baseC,{at:at,section:section});if(quality)c.quality=quality;
+    const ex=chords.findIndex(x=>Math.abs(x.at-at)<0.25);
+    if(ex>=0)chords[ex]=c;else chords.push(c);
+    sortChords();playChord(c,700,true);renderChordTrack();
+  }
+  // 点和弦盘:选了位置就填那;没选则顺序往后(光标 chordCursor,填完后移一小节)
+  function fillChord(baseC,quality){
+    const mL=measureLen();
+    let at;
+    if(selChordAt!=null){at=selChordAt;selChordAt=null;chordCursor=Math.round(at/mL)*mL+mL;}
+    else{at=snapBeat(chordCursor);chordCursor+=mL;} // 默认位置也吸附到音符边界
+    placeChord(baseC,at,quality);
   }
 
   function renderChordTrack(){
     if(!chordInner)return;
-    syncProg();
-    const boxes=measureBoxes();chordInner.innerHTML='';
-    let totalW=melodyBox.scrollWidth||0;
-    chordProg.forEach((c,i)=>{
-      const b=boxes[i]||{left:i*90,width:84};totalW=Math.max(totalW,b.left+b.width);
+    sortChords();chordInner.innerHTML='';
+    const segs=melodySegs();
+    const span=totalSpan();
+    let totalW=Math.max(melodyBox.scrollWidth||0, beatToX(span,segs));
+    const mL=measureLen();
+    // 小节竖线
+    for(let m=1;m*mL<span+1e-6;m++){
+      const ln=document.createElement('div');ln.className='cbar';ln.style.left=beatToX(m*mL,segs)+'px';chordInner.appendChild(ln);
+    }
+    // 位置光标:手动选中显示实线"在此放";否则显示下一个顺序插入位(淡)
+    const caretAt=(selChordAt!=null)?selChordAt:chordCursor;
+    if(caretAt!=null){
+      const cx=beatToX(caretAt,segs);
+      const car=document.createElement('div');car.className='chord-caret'+(selChordAt!=null?'':' ghost');car.style.left=(cx-1)+'px';
+      if(selChordAt!=null)car.innerHTML='<span class="cc-tip">在此放和弦</span>';
+      chordInner.appendChild(car);
+    }
+    // 和弦块:起点清晰,向右渐隐;渐隐范围 = min(到下一和弦, 一小节)
+    chords.forEach((c,i)=>{
+      const start=c.at;
+      const fadeEnd=Math.min(chordEndBeat(i),start+mL); // 渐隐最长一小节
+      const left=beatToX(start,segs),w=Math.max(34,beatToX(fadeEnd,segs)-left);
       const slot=document.createElement('div');slot.dataset.i=i;
-      slot.style.left=b.left+'px';slot.style.width=b.width+'px';
-      if(c){slot.className='measure-slot func-'+c.func;
-        slot.innerHTML='<span class="mnum">'+(i+1)+'</span><span class="cname">'+chordName(c)+'</span><span class="croman">'+c.roman+'</span>';
-        slotLongPress(slot,c,i);
-      }else{slot.className='measure-slot empty';
-        slot.innerHTML='<span class="mnum">'+(i+1)+'</span><span class="cname">+</span>';
-        slot.addEventListener('click',()=>{selMeasure=i;renderChordTrack();flash('第'+(i+1)+'小节 · 点下方和弦填入');});
-      }
-      if(i===selMeasure&&!anchorMode){slot.style.outline='2px solid rgba(245,243,255,0.9)';slot.style.outlineOffset='-2px';slot.style.zIndex='2';}
+      slot.className='chord-clip func-'+c.func;
+      slot.style.left=left+'px';slot.style.width=w+'px';
+      slot.innerHTML='<span class="cc-start"></span><span class="cname">'+chordName(c)+'</span>';
+      clipInteract(slot,i,c);
       chordInner.appendChild(slot);
     });
-    // 自由锚点徽标(叠加在对应音符上方)
-    if(anchorMode){
-      const chips=[...melodyBox.querySelectorAll('.note-chip')];
-      anchors.forEach((a,ai)=>{
-        const chip=chips[a.ni];if(!chip)return;const c=a.chord;
-        const bd=document.createElement('div');bd.className='anchor-badge func-'+c.func;bd.dataset.ai=ai;
-        bd.style.left=(chip.offsetLeft+chip.offsetWidth/2)+'px';
-        bd.innerHTML='<span class="abn">'+chordName(c)+'</span><span class="abr">'+c.roman+'</span>';
-        bd.addEventListener('click',ev=>{ev.stopPropagation();playChord(c,600,true);openAnchorEdit(ai);});
-        chordInner.appendChild(bd);
-      });
-    }
     chordInner.style.width=totalW+'px';
-    if(chordTrack)chordTrack.scrollLeft=melodyBox.scrollLeft; // 与旋律轨同步
-    if(ctInfo)ctInfo.textContent=anchorMode?('自由锚点 · '+anchors.length+'个'):(timeSig+' · '+chordProg.length+'小节');
+    // 点空白 = 把位置光标移到该拍
+    chordInner.onclick=ev=>{
+      if(ev.target!==chordInner&&ev.target.className!=='cbar')return;
+      const rect=chordInner.getBoundingClientRect();
+      selChordAt=snapBeat(xToBeat(ev.clientX-rect.left,segs));renderChordTrack();flash('已选位置 · 点下方和弦放入');
+    };
+    if(chordTrack)chordTrack.scrollLeft=melodyBox.scrollLeft;
+    if(ctInfo)ctInfo.textContent=chords.length?(chords.length+'个和弦 · 拖动可移位'):(timeSig+' · 点下方和弦开始(默认每小节一个)');
+  }
+
+  // 和弦块交互:必须先按下(isDown)才响应移动;轻点=试听;拖动=移位;长按=加花/删除
+  function clipInteract(el,i,c){
+    let lp=null,isDown=false,fired=false,dragging=false,captured=false,px=0,py=0,curAt=c.at,segsCache=null,pid=null;
+    function down(e){
+      if(e.button!=null&&e.button!==0)return; // 仅主键/触摸
+      isDown=true;fired=false;dragging=false;captured=false;px=e.clientX;py=e.clientY;curAt=c.at;pid=e.pointerId;
+      lp=setTimeout(()=>{if(dragging)return;fired=true;if(navigator.vibrate)navigator.vibrate(14);openVariants(c,i);},420);
+    }
+    function move(e){
+      if(!isDown)return; // 没按下不响应(修复"鼠标进去就拖")
+      const dx=e.clientX-px,dy=e.clientY-py;
+      if(!dragging){
+        if(Math.abs(dx)>8||Math.abs(dy)>8){
+          if(lp){clearTimeout(lp);lp=null;}
+          if(Math.abs(dx)>=Math.abs(dy)){dragging=true;document.body.classList.add('resizing');segsCache=melodySegs();
+            try{el.setPointerCapture(pid);captured=true;}catch(_){}}
+          else{isDown=false;return;} // 竖向滑动→交给页面滚动,放弃本次
+        }else return;
+      }
+      e.preventDefault();
+      const rect=chordTrack.getBoundingClientRect();
+      const x=e.clientX-rect.left+chordTrack.scrollLeft;
+      let at=snapBeat(xToBeat(x,segsCache));
+      const prev=i>0?chords[i-1].at+0.5:0, next=i<chords.length-1?chords[i+1].at-0.5:1e9;
+      at=Math.max(prev,Math.min(next,at));
+      curAt=at;el.style.left=beatToX(at,segsCache)+'px'; // 只移动元素,不重建
+    }
+    function up(e){
+      if(!isDown)return;isDown=false;
+      if(lp){clearTimeout(lp);lp=null;}
+      if(captured){try{el.releasePointerCapture(pid);}catch(_){}}
+      if(dragging){dragging=false;document.body.classList.remove('resizing');
+        chords[i].at=curAt;sortChords();chordCursor=Math.max(chordCursor,Math.round(curAt/measureLen())*measureLen()+measureLen());renderChordTrack();return;}
+      if(fired)return;
+      // 轻点和弦块:在点击处(吸附音符边界)设插入位;若正好点在块起点则试听该和弦
+      const segs=melodySegs();const rect=chordTrack.getBoundingClientRect();
+      const at=snapBeat(xToBeat(e.clientX-rect.left+chordTrack.scrollLeft,segs));
+      if(Math.abs(at-c.at)<0.25){playChord(c,600,true);selChordAt=null;}
+      else{selChordAt=at;flash('在此处点和弦→上个和弦到此终止');}
+      renderChordTrack();
+    }
+    el.addEventListener('pointerdown',down);
+    el.addEventListener('pointermove',move);
+    el.addEventListener('pointerup',up);
+    el.addEventListener('pointercancel',()=>{isDown=false;if(lp){clearTimeout(lp);lp=null;}if(dragging){dragging=false;document.body.classList.remove('resizing');renderChordTrack();}});
   }
 
   function renderChordPal(){
@@ -1267,7 +1530,7 @@
       b.innerHTML='<span class="cn">'+chordName(c)+'</span><span class="rn">'+c.roman+'</span>';
       let lp=null,fired=false,px=0,py=0;
       b.addEventListener('pointerdown',e=>{fired=false;px=e.clientX;py=e.clientY;
-        lp=setTimeout(()=>{fired=true;if(navigator.vibrate)navigator.vibrate(14);openVariants(c,null);},460);});
+        lp=setTimeout(()=>{fired=true;if(navigator.vibrate)navigator.vibrate(14);openVariants(c,-1);},460);});
       b.addEventListener('pointermove',e=>{if(lp&&Math.hypot(e.clientX-px,e.clientY-py)>10){clearTimeout(lp);lp=null;}});
       b.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;}if(!fired){hit(b);fillChord(c);}});
       b.addEventListener('pointercancel',()=>{if(lp){clearTimeout(lp);lp=null;}});
@@ -1275,68 +1538,40 @@
     });
   }
 
-  function fillChord(baseC,quality){
-    syncProg();
-    if(selMeasure<0||selMeasure>=chordProg.length){let e=chordProg.findIndex(x=>!x);selMeasure=e<0?0:e;}
-    const c=Object.assign({},baseC,{section:section});if(quality)c.quality=quality;
-    chordProg[selMeasure]=c;playChord(c,700,true);
-    selMeasure=Math.min(chordProg.length-1,selMeasure+1);
-    renderChordTrack();
-  }
-
+  // 加花:target>=0 改已有和弦 i;target=-1 表示对和弦盘按钮长按(新建变体到选中位)
   function openVariants(baseC,target){
     const triadQual=(isMinorKey(key)?MIN_QUAL:MAJ_QUAL)[baseC.degree];
     const vars=variantsFor(triadQual);
-    const curQual=(target!=null&&chordProg[target])?chordProg[target].quality:baseC.quality;
-    let html='<div class="var-pop"><div class="vp-head">为 <b>'+baseC.rootLetter+'</b>('+baseC.roman+')加花 · 长按可改变色彩</div><div class="var-grid">';
+    const curQual=(target>=0&&chords[target])?chords[target].quality:baseC.quality;
+    let html='<div class="var-pop"><div class="vp-head">为 <b>'+baseC.rootLetter+'</b>('+baseC.roman+')加花 · 选一种色彩</div><div class="var-grid">';
     vars.forEach(v=>{const nm=baseC.rootLetter+(QUAL_SUFFIX[v.q]||'');
       html+='<button class="var-item'+(v.q===curQual?' on':'')+'" data-q="'+v.q+'"><span>'+nm+'</span><span class="vdesc">'+v.desc+'</span></button>';});
     html+='</div>';
-    if(target!=null)html+='<button class="ai-close var-clear" id="varClear">清除此小节和弦</button>';
+    if(target>=0)html+='<button class="ai-close var-clear" id="varClear">删除此和弦</button>';
     html+='<button class="ai-close" id="varClose">关闭</button></div>';
     varCard.innerHTML=html;varOverlay.classList.add('show');
     setTimeout(()=>{
       varCard.querySelectorAll('.var-item').forEach(vb=>vb.addEventListener('click',()=>{
         const q=vb.dataset.q;
-        if(target!=null){const ex=chordProg[target];const nc=Object.assign({},baseC,{quality:q,section:ex?ex.section:section});chordProg[target]=nc;playChord(nc,700,true);renderChordTrack();}
+        if(target>=0){const nc=Object.assign({},chords[target],baseC,{quality:q,at:chords[target].at});chords[target]=nc;playChord(nc,700,true);renderChordTrack();}
         else fillChord(baseC,q);
         varOverlay.classList.remove('show');
       }));
-      const cl=$('varClear');if(cl)cl.addEventListener('click',()=>{chordProg[target]=null;renderChordTrack();varOverlay.classList.remove('show');flash('已清除');});
+      const cl=$('varClear');if(cl)cl.addEventListener('click',()=>{chords.splice(target,1);selChordAt=null;renderChordTrack();varOverlay.classList.remove('show');flash('已删除');});
       const cc=$('varClose');if(cc)cc.addEventListener('click',()=>varOverlay.classList.remove('show'));
     },40);
   }
 
-  function highlightMeasure(m){if(!chordInner)return;chordInner.querySelectorAll('.measure-slot').forEach((s,idx)=>s.classList.toggle('playing',idx===m));}
-
-  // ═══ 自由锚点:在某个音符处放置/编辑和弦 ═══
-  const pickOverlay=$('pickOverlay'),pickCard=$('pickCard');
-  function openChordPicker(ni,editAi){
-    const dia=diatonicChords(key);
-    let html='<h3>'+(editAi!=null?'修改':'第 '+(ni+1)+' 音处加')+'和弦</h3><div class="ai-desc">选择一个和弦锚定在这里,播放到此音时切换</div><div class="chord-pal" style="grid-template-columns:repeat(4,1fr)">';
-    dia.forEach((c,di)=>{html+='<button class="chord-btn func-'+c.func+'" data-di="'+di+'"><span class="cn">'+chordName(c)+'</span><span class="rn">'+c.roman+'</span></button>';});
-    html+='</div>';
-    if(editAi!=null)html+='<button class="ai-close var-clear" id="pickDel">删除此锚点</button>';
-    html+='<button class="ai-close" id="pickClose">关闭</button>';
-    pickCard.innerHTML=html;pickOverlay.classList.add('show');
-    setTimeout(()=>{
-      pickCard.querySelectorAll('.chord-btn').forEach(b=>b.addEventListener('click',()=>{
-        const c=Object.assign({},dia[parseInt(b.dataset.di)],{section:section});
-        if(editAi!=null)anchors[editAi].chord=c;else{anchors.push({ni:ni,chord:c});anchors.sort((a,b)=>a.ni-b.ni);}
-        playChord(c,700,true);renderChordTrack();pickOverlay.classList.remove('show');
-      }));
-      const del=$('pickDel');if(del)del.addEventListener('click',()=>{anchors.splice(editAi,1);renderChordTrack();pickOverlay.classList.remove('show');flash('已删除锚点');});
-      const cl=$('pickClose');if(cl)cl.addEventListener('click',()=>pickOverlay.classList.remove('show'));
-    },40);
+  function chordAtBeat(b){ // 当前拍属于哪个和弦(最后一个 at<=b)
+    let idx=-1;for(let i=0;i<chords.length;i++){if(chords[i].at<=b+1e-6)idx=i;else break;}return idx;
   }
-  function openAnchorEdit(ai){openChordPicker(anchors[ai].ni,ai);}
-  pickOverlay.addEventListener('click',e=>{if(e.target===pickOverlay)pickOverlay.classList.remove('show');});
+  function highlightChordClip(idx){if(!chordInner)return;chordInner.querySelectorAll('.chord-clip').forEach((s)=>s.classList.toggle('playing',parseInt(s.dataset.i)===idx));}
 
-  // ═══ L2 经典进行套路 ═══
+  // ═══ L2 经典进行套路(铺成一小节一个) ═══
   const progOverlay=$('progOverlay'),progCard=$('progCard');
   function openProgressions(){
     const minorK=isMinorKey(key);
-    let html='<h3>🎼 经典和弦进行</h3><div class="ai-desc">一键套用到各小节(循环填充),之后可逐格微调</div><div class="prog-list">';
+    let html='<h3>🎼 经典和弦进行</h3><div class="ai-desc">一键铺成每小节一个和弦,可再拖动/替换</div><div class="prog-list">';
     PROGRESSIONS.forEach((p,pi)=>{
       const dia=diatonicChords(key);const preview=p.degs.map(d=>chordName(dia[d])).join(' - ');
       html+='<div class="prog-item" data-pi="'+pi+'"><div class="pname">'+p.name+(p.key===(minorK?'minor':'major')?' <span class="pdeg">·契合当前调</span>':'')+'</div><div class="pdeg">'+preview+'</div><div class="pdesc">'+p.desc+'</div></div>';
@@ -1351,25 +1586,22 @@
     },40);
   }
   function applyProgression(p){
-    syncProg();const dia=diatonicChords(key);const N=Math.max(chordProg.length,p.degs.length);
-    while(chordProg.length<N)chordProg.push(null);
-    for(let i=0;i<N;i++){const d=p.degs[i%p.degs.length];chordProg[i]=Object.assign({},dia[d],{section:section});}
-    anchorMode=false;const chk=$('anchorChk');if(chk)chk.checked=false;document.body.classList.remove('anchor-on');
-    renderChordTrack();flash('已套用:'+p.name);
+    const dia=diatonicChords(key),mL=measureLen();
+    chords=p.degs.map((d,i)=>Object.assign({},dia[d],{at:i*mL,section:section}));
+    selChordAt=null;chordCursor=p.degs.length*mL;renderChordTrack();flash('已套用:'+p.name);
   }
   progOverlay.addEventListener('click',e=>{if(e.target===progOverlay)progOverlay.classList.remove('show');});
 
-  // 单独试听整条和弦进行(不依赖旋律)
+  // 单独试听整条和弦进行
   let chordPreviewTimer=null;
   function playChordProgression(){
     audio();
     if(chordPreviewTimer){clearInterval(chordPreviewTimer);chordPreviewTimer=null;flash('停止试听');return;}
-    const seq=anchorMode?anchors.map(a=>a.chord):chordProg.filter(Boolean);
-    if(!seq.length){flash('还没有和弦');return;}
-    const bpm=parseInt(speedSlider.value),stepMs=(60/bpm)*1000*measureLen();let j=0;
-    const one=()=>{const c=seq[j%seq.length];if(c){playChord(c,stepMs*0.92,true);highlightMeasure(anchorMode?-1:chordProg.indexOf(c));}j++;};
-    one();chordPreviewTimer=setInterval(one,stepMs);
-    setTimeout(()=>{if(chordPreviewTimer){clearInterval(chordPreviewTimer);chordPreviewTimer=null;highlightMeasure(-1);}},stepMs*seq.length+120);
+    if(!chords.length){flash('还没有和弦');return;}
+    const bpm=parseInt(speedSlider.value),baseMs=(60/bpm)*1000;let j=0;
+    const one=()=>{const c=chords[j%chords.length];if(c){playChord(c,baseMs*2*0.92,true);highlightChordClip(j%chords.length);}j++;};
+    one();chordPreviewTimer=setInterval(one,baseMs*2);
+    setTimeout(()=>{if(chordPreviewTimer){clearInterval(chordPreviewTimer);chordPreviewTimer=null;highlightChordClip(-1);}},baseMs*2*chords.length+120);
   }
 
   // 旋律轨 ⇆ 和弦轨 横向滚动同步(对齐)
@@ -1384,51 +1616,28 @@
   if(_sl)_sl.addEventListener('click',()=>scrollScore(-1));
   if(_sr)_sr.addEventListener('click',()=>scrollScore(1));
 
-  // 面板切换
+  // 点轨聚焦:点旋律轨=旋律态,点和弦轨=和弦态(取代 tab)
   let panel='melody';
   function setPanel(p){
     panel=p;
-    document.body.classList.toggle('panel-chord',p==='chord');
-    document.body.classList.toggle('panel-melody',p==='melody');
-    document.querySelectorAll('.ptab').forEach(t=>t.classList.toggle('sel',t.dataset.panel===p));
+    document.body.classList.toggle('focus-chord',p==='chord');
+    document.body.classList.toggle('focus-melody',p==='melody');
     if(p==='chord'){renderChordPal();renderChordTrack();}
   }
-  document.querySelectorAll('.ptab').forEach(t=>t.addEventListener('click',()=>setPanel(t.dataset.panel)));
+  melodyBox.addEventListener('pointerdown',()=>{if(panel!=='melody')setPanel('melody');},true);
+  if(chordTrack)chordTrack.addEventListener('pointerdown',()=>{if(panel!=='chord')setPanel('chord');},true);
   varOverlay.addEventListener('click',e=>{if(e.target===varOverlay)varOverlay.classList.remove('show');});
 
-  // 拍号 / 段落
-  document.querySelectorAll('#tsRow button').forEach(b=>b.addEventListener('click',()=>{
-    document.querySelectorAll('#tsRow button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');
-    timeSig=b.dataset.ts;renderChordTrack();flash('拍号 '+timeSig);
-  }));
+  // 段落
   document.querySelectorAll('#sectionRow button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('#sectionRow button').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');
     section=b.dataset.sec;flash('当前段落:'+b.textContent);
   }));
 
-  // 自由锚点开关 / 套路 / 试听进行
-  const anchorChk=$('anchorChk'),palHint=$('palHint');
-  if(anchorChk)anchorChk.addEventListener('change',()=>{
-    anchorMode=anchorChk.checked;document.body.classList.toggle('anchor-on',anchorMode);
-    if(palHint)palHint.textContent=anchorMode?'锚点模式 · 点旋律音符加和弦(旋律锁定)':'当前调和弦 · 点选填入选中小节';
-    renderMelody();renderChordTrack();
-    flash(anchorMode?'自由锚点:点旋律音符加和弦':'回到小节模式');
-  });
+  // 和弦休止 / 套路 / 试听进行
+  const btnChordClear=$('btnChordClear');if(btnChordClear)btnChordClear.addEventListener('click',()=>{if(!chords.length){flash('没有和弦');return;}chords=[];selChordAt=null;chordCursor=0;renderChordTrack();flash('已清空和弦');});
   const btnProg=$('btnProg');if(btnProg)btnProg.addEventListener('click',openProgressions);
   const btnChordPlay=$('btnChordPlay');if(btnChordPlay)btnChordPlay.addEventListener('click',playChordProgression);
-
-  // 移动端左右滑动切换面板(避开可滚动/可交互区)
-  (function(){
-    const content=document.querySelector('.content');let sx=0,sy=0,sw=false;
-    content.addEventListener('pointerdown',e=>{
-      if(e.target.closest('#melodyBox,.chord-track,.oct-stage,button,input,select,.loop')){sw=false;return;}
-      sx=e.clientX;sy=e.clientY;sw=true;
-    });
-    content.addEventListener('pointerup',e=>{
-      if(!sw)return;sw=false;const dx=e.clientX-sx,dy=e.clientY-sy;
-      if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*2){setPanel(dx<0?'chord':'melody');}
-    });
-  })();
 
   // ═══ 键盘快捷键 ═══
   document.addEventListener('keydown',e=>{
@@ -1449,10 +1658,10 @@
     }
     if(k==='ArrowLeft'){e.preventDefault();if(octave>-1){octave--;renderNotes();flash(OCT_LABELS[octave]+'音区');}else{flash('已是最低音区');}return;}
     if(k==='ArrowRight'){e.preventDefault();if(octave<1){octave++;renderNotes();flash(OCT_LABELS[octave]+'音区');}else{flash('已是最高音区');}return;}
-    if(k===' '){e.preventDefault();hit(restBtn);addRest();return;}
+    if(k===' '){e.preventDefault();hit(tieBtn);addTie();return;}
+    if(k==='0'){e.preventDefault();hit(restBtn);addRest();return;}
     if(k==='Enter'){e.preventDefault();playMelody();return;}
     if(k==='Backspace'||k==='Delete'){e.preventDefault();if(playing)return;if(melody.length){melody.pop();renderMelody();flash('已撤销');}return;}
-    if(k==='.'){e.preventDefault();rhythmDur='4.';document.querySelectorAll('#rhythmRow button').forEach(x=>x.classList.remove('sel'));document.querySelector('#rhythmRow button[data-dur="4."]').classList.add('sel');}
   });
 
   // ═══ 切换调:保持简谱级数,整体移到新调 ═══
@@ -1487,23 +1696,37 @@
     // 和弦:级数不变,根音换成新调对应级数(加花的变体音质保留)
     const oldQual=isMinorKey(oldK)?MIN_QUAL:MAJ_QUAL;
     const newDia=diatonicChords(nk);
-    chordProg=chordProg.map(c=>{
-      if(!c)return c;const nd=newDia[c.degree]||newDia[0];
-      let q=c.quality;if(q===oldQual[c.degree])q=nd.quality; // 原是基本三和弦→换成新调基本三和弦
+    chords=chords.map(c=>{
+      const nd=newDia[c.degree]||newDia[0];
+      let q=c.quality;if(q===oldQual[c.degree])q=nd.quality;
       return Object.assign({},c,{rootLetter:nd.rootLetter,rootPC:nd.rootPC,func:nd.func,roman:nd.roman,quality:q});
     });
-    key=nk;keySel.value=nk;octave=0;renderNotes();renderMelody();
+    key=nk;keySel.value=nk;octave=0;renderNotes();renderMelody();renderChordTrack();
   }
 
   // ═══ 事件绑定 ═══
   keySel.addEventListener('change',()=>{remapKey(keySel.value);flash('已切换至 '+SCALES[key].name);});
   btnPlay.addEventListener('click',playMelody);
   btnStop.addEventListener('click',stopPlayback);
-  speedSlider.addEventListener('input',()=>{bpmVal.textContent=speedSlider.value;});
+  // 速度:步进 ±10 + 可点击输入 + 桌面滑条(共用 speedSlider 值)
+  const bpmValD=$('bpmValD');
+  function syncBpm(v){bpmVal.value=v;if(bpmValD)bpmValD.textContent=v;}
+  function setTempo(v){v=Math.max(60,Math.min(200,v||120));speedSlider.value=v;syncBpm(v);}
+  speedSlider.addEventListener('input',()=>syncBpm(speedSlider.value));
+  $('tempoUp').addEventListener('click',()=>setTempo(parseInt(speedSlider.value)+10));
+  $('tempoDown').addEventListener('click',()=>setTempo(parseInt(speedSlider.value)-10));
+  bpmVal.addEventListener('change',()=>setTempo(parseInt(bpmVal.value)));
+  bpmVal.addEventListener('keydown',e=>{if(e.key==='Enter'){bpmVal.blur();}});
+  bpmVal.addEventListener('focus',()=>bpmVal.select());
+  // 拍号(下拉,两区共用)
+  $('tsSelect').addEventListener('change',e=>{timeSig=e.target.value;renderMelody();renderChordTrack();flash('拍号 '+timeSig);});
+  // 试音开关(单一开关,替代 tab)
+  $('tryCheck').addEventListener('change',e=>setTryMode(e.target.checked));
   btnUndo.addEventListener('click',()=>{if(playing)return;if(!melody.length){flash('无音符可撤销');return;}melody.pop();renderMelody();flash('已撤销');});
   btnClear.addEventListener('click',()=>{if(playing)return;if(!melody.length){flash('旋律已空');return;}melody=[];renderMelody();flash('已清空');});
   btnAI.addEventListener('click',showAIResult);
   restBtn.addEventListener('pointerdown',e=>{e.preventDefault();hit(restBtn);addRest();});
+  tieBtn.addEventListener('pointerdown',e=>{e.preventDefault();hit(tieBtn);addTie();});
   aiOverlay.addEventListener('click',e=>{if(e.target===aiOverlay)aiOverlay.classList.remove('show');});
   document.addEventListener('dblclick',e=>{if(e.target.closest('button,.note-chip'))e.preventDefault();});
 
@@ -1515,29 +1738,35 @@
     octave=parseInt(t.dataset.oct);renderNotes();flash(OCT_LABELS[octave]+'音区');
   }));
 
+  // 试音开关(单一开关)
+  function setTryMode(on){
+    tryMode=on;
+    const chk=$('tryCheck');if(chk)chk.checked=on;
+    document.body.classList.toggle('try-on',on);
+    flash(on?'试音:随便弹,不录入':'录入:点音符填入');
+  }
+
   // 移动端休止
   restBtnM.addEventListener('pointerdown',e=>{e.preventDefault();hit(restBtnM);addRest();});
+  {const tm=$('tieBtnM');if(tm)tm.addEventListener('pointerdown',e=>{e.preventDefault();hit(tm);addTie();});}
 
   // ═══ 存储 · 旋律库(localStorage,无需后端) + 分享链接 ═══
   const LSK='songwriter_saves_v1';
   function loadSaves(){try{return JSON.parse(localStorage.getItem(LSK)||'[]');}catch(e){return[];}}
   function persistSaves(a){try{localStorage.setItem(LSK,JSON.stringify(a));}catch(e){flash('存储空间不足');}}
-  function serC(c){return c?{r:c.rootLetter,q:c.quality,dg:c.degree,f:c.func,rm:c.roman,s:c.section||'verse'}:null;}
-  function deC(c){return c?{rootLetter:c.r,rootPC:PC[c.r],quality:c.q,degree:c.dg,func:c.f,roman:c.rm,section:c.s}:null;}
-  function serialize(){return{key:key,ts:timeSig,am:anchorMode?1:0,
-    notes:melody.map(n=>({t:n.note,l:n.label,i:n.inKey?1:0,d:n.durMul,r:n.rest?1:0})),
-    chords:chordProg.map(serC),
-    anchors:anchors.map(a=>({ni:a.ni,c:serC(a.chord)}))};}
+  function serCh(c){return {a:c.at,r:c.rootLetter,q:c.quality,dg:c.degree,f:c.func,rm:c.roman,s:c.section||'verse'};}
+  function deCh(c){return {at:c.a||0,rootLetter:c.r,rootPC:PC[c.r],quality:c.q,degree:c.dg,func:c.f,roman:c.rm,section:c.s};}
+  function serialize(){return{key:key,ts:timeSig,
+    notes:melody.map(n=>({t:n.note,l:n.label,i:n.inKey?1:0,d:n.durMul,r:n.rest?1:0,y:n.tie?1:0})),
+    chordlist:chords.map(serCh)};}
   function deserialize(o){
     if(!o||!o.notes)return false;
     key=o.key&&SCALES[o.key]?o.key:'C';keySel.value=key;octave=0;
     timeSig=o.ts&&TS_LEN[o.ts]?o.ts:'4/4';
-    document.querySelectorAll('#tsRow button').forEach(x=>x.classList.toggle('sel',x.dataset.ts===timeSig));
-    chordProg=Array.isArray(o.chords)?o.chords.map(deC):[];
-    anchors=Array.isArray(o.anchors)?o.anchors.map(a=>({ni:a.ni,chord:deC(a.c)})).filter(a=>a.chord):[];
-    anchorMode=!!o.am;const chk=$('anchorChk');if(chk)chk.checked=anchorMode;document.body.classList.toggle('anchor-on',anchorMode);
-    selMeasure=0;playStart=-1;
-    melody=o.notes.map(x=>({note:x.t||null,label:x.l,inKey:!!x.i,durMul:x.d||4,rest:!!x.r,freq:x.t?freq(x.t):0}));
+    {const ts=$('tsSelect');if(ts)ts.value=timeSig;}
+    chords=Array.isArray(o.chordlist)?o.chordlist.map(deCh):[];
+    selChordAt=null;chordCursor=chords.length?(chords[chords.length-1].at+measureLen()):0;caret=0;playStart=0;
+    melody=o.notes.map(x=>({note:x.t||null,label:x.l,inKey:!!x.i,durMul:x.d||4,rest:!!x.r,tie:!!x.y,freq:x.t?freq(x.t):0}));
     renderNotes();renderMelody();renderChordPal();renderChordTrack();return true;
   }
   function dstr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
