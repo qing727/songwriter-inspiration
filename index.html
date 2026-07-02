@@ -501,9 +501,14 @@
   .chord-clip .cc-drag{position:absolute;left:4px;top:0;bottom:0;width:15px;z-index:3;cursor:grab;touch-action:none;
     display:flex;align-items:center;justify-content:center;font-size:12px;letter-spacing:-1px;color:rgba(255,255,255,0.55);}
   .chord-clip .cc-drag:active{cursor:grabbing;}
-  /* 空态引导 */
-  .chord-guide{position:absolute;left:0;top:0;bottom:0;display:flex;align-items:center;padding-left:10px;
-    font-size:12px;color:var(--fg-muted);font-style:italic;white-space:nowrap;pointer-events:none;opacity:0.85;}
+  /* 空态引导(可点 + 闪烁) */
+  .chord-guide{position:absolute;left:6px;top:6px;bottom:6px;display:flex;align-items:center;padding:0 14px;cursor:pointer;
+    font-size:12.5px;font-weight:600;color:var(--primary-soft);white-space:nowrap;border-radius:10px;
+    background:rgba(124,58,237,0.14);border:1px dashed rgba(167,139,250,0.5);}
+  .chord-guide.pulse{animation:guidePulse 1.3s ease-in-out infinite;}
+  @keyframes guidePulse{0%,100%{box-shadow:0 0 0 0 rgba(124,58,237,0.35);background:rgba(124,58,237,0.12);}50%{box-shadow:0 0 0 6px rgba(124,58,237,0);background:rgba(124,58,237,0.26);}}
+  .chord-pal.flash{animation:palFlash 1.4s ease-in-out;}
+  @keyframes palFlash{0%,100%{box-shadow:none;}30%,70%{box-shadow:0 0 0 3px rgba(124,58,237,0.4);}}
   .chord-clip.playing{filter:brightness(1.25);}
   .chord-clip.playing .cc-start{box-shadow:0 0 12px currentColor;}
   /* 渐隐背景(左实右透) */
@@ -1503,10 +1508,13 @@
       clipInteract(slot,i,c);
       chordInner.appendChild(slot);
     });
-    // 空态引导(俏皮)
+    // 空态引导(精简 + 闪烁吸引点击);点一下=聚焦和弦区并高亮和弦盘
     if(!chords.length){
-      const g=document.createElement('div');g.className='chord-guide';
-      g.innerHTML='🎸 先来点和弦打底吧 · 点下面挑一个 —— 不如先有和弦,再说旋律~';
+      const g=document.createElement('div');g.className='chord-guide pulse';
+      g.innerHTML='🎸 点这里,先加个和弦';
+      g.addEventListener('click',ev=>{ev.stopPropagation();setPanel('chord');
+        if(chordPal){chordPal.classList.add('flash');setTimeout(()=>chordPal.classList.remove('flash'),1400);}
+        flash('挑一个和弦放进来吧');});
       chordInner.appendChild(g);
     }
     chordInner.style.width=totalW+'px';
