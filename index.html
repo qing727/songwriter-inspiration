@@ -1256,11 +1256,15 @@
 
   function stopPlayback(){if(timer)clearTimeout(timer);timer=null;playing=false;active=-1;
     const sl=melodyBox.scrollLeft;renderMelody();melodyBox.scrollLeft=sl; // 保留滚动位置,停止时不跳
+    if(typeof highlightChordClip==='function')highlightChordClip(-1);
     btnPlay.textContent='▶';btnPlay.classList.remove('playing');}
 
   function playMelody(){
-    if(!melody.length){flash('请先录入音符');return;}
     if(playing){stopPlayback();return;}
+    if(!melody.length){ // 没旋律但有和弦→只播和弦进行
+      if(chords.length){playChordProgression();return;}
+      flash('先录点音符或加个和弦');return;
+    }
     audio();playing=true;btnPlay.textContent='⏸';btnPlay.classList.add('playing');
     renderMelody(); // 播放前完整渲染一次;之后只移动高亮,不再重建
     const bpm=parseInt(speedSlider.value),baseMs=(60/bpm)*1000;
@@ -1639,16 +1643,20 @@
   }
   progOverlay.addEventListener('click',e=>{if(e.target===progOverlay)progOverlay.classList.remove('show');});
 
-  // 单独试听整条和弦进行
-  let chordPreviewTimer=null;
+  // 只播和弦进行(无旋律时);按每个和弦的真实时长走,支持循环 + 停止
   function playChordProgression(){
-    audio();
-    if(chordPreviewTimer){clearInterval(chordPreviewTimer);chordPreviewTimer=null;flash('停止试听');return;}
+    if(playing){stopPlayback();return;}
     if(!chords.length){flash('还没有和弦');return;}
+    audio();playing=true;btnPlay.textContent='⏸';btnPlay.classList.add('playing');
     const bpm=parseInt(speedSlider.value),baseMs=(60/bpm)*1000;let j=0;
-    const one=()=>{const c=chords[j%chords.length];if(c){playChord(c,baseMs*2*0.92,true);highlightChordClip(j%chords.length);}j++;};
-    one();chordPreviewTimer=setInterval(one,baseMs*2);
-    setTimeout(()=>{if(chordPreviewTimer){clearInterval(chordPreviewTimer);chordPreviewTimer=null;highlightChordClip(-1);}},baseMs*2*chords.length+120);
+    function step(){
+      if(!playing)return;
+      if(j>=chords.length){if(loopCheck.checked){j=0;}else{stopPlayback();return;}}
+      const c=chords[j],dur=chordEndBeat(j)-c.at;
+      highlightChordClip(j);playChord(c,baseMs*dur*0.92,true);
+      j++;timer=setTimeout(step,baseMs*dur);
+    }
+    step();
   }
 
   // 旋律轨 ⇆ 和弦轨 横向滚动同步(对齐)
