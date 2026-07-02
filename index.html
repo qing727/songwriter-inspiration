@@ -770,7 +770,6 @@
     <div class="chord-panel">
       <div class="chord-opts">
         <button class="mini-btn" id="btnProg">🎼 套路</button>
-        <button class="mini-btn" id="btnChordPlay">▶ 试听进行</button>
         <button class="mini-btn" id="btnChordClear">清空和弦</button>
       </div>
       <div>
@@ -1471,12 +1470,12 @@
     if(ex>=0)chords[ex]=c;else chords.push(c);
     sortChords();playChord(c,700,true);renderChordTrack();
   }
-  // 点和弦盘:选了位置就填那;没选则顺序往后(光标 chordCursor,填完后移一小节)
+  // 点和弦盘:选了位置就填那;没选则顺序往后(每点一个=一小节,可无限往后加)
   function fillChord(baseC,quality){
     const mL=measureLen();
     let at;
     if(selChordAt!=null){at=selChordAt;selChordAt=null;chordCursor=Math.round(at/mL)*mL+mL;}
-    else{at=snapBeat(chordCursor);chordCursor+=mL;} // 默认位置也吸附到音符边界
+    else{at=chordCursor;chordCursor+=mL;} // 默认:直接按整小节递增,不吸附→可无限往后
     placeChord(baseC,at,quality);
   }
 
@@ -1698,7 +1697,6 @@
   // 和弦休止 / 套路 / 试听进行
   const btnChordClear=$('btnChordClear');if(btnChordClear)btnChordClear.addEventListener('click',()=>{if(!chords.length){flash('没有和弦');return;}chords=[];selChordAt=null;chordCursor=0;renderChordTrack();flash('已清空和弦');});
   const btnProg=$('btnProg');if(btnProg)btnProg.addEventListener('click',openProgressions);
-  const btnChordPlay=$('btnChordPlay');if(btnChordPlay)btnChordPlay.addEventListener('click',playChordProgression);
 
   // ═══ 键盘快捷键 ═══
   document.addEventListener('keydown',e=>{
