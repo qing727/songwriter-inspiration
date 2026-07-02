@@ -144,6 +144,7 @@
     display:flex;align-items:center;justify-content:center;
     box-shadow:0 2px 8px rgba(0,0,0,0.15);animation:bubFloat 3.4s ease-in-out infinite;transition:transform .12s,background .15s;}
   .float-bub.out{background:rgba(52,211,153,0.12);border-color:rgba(52,211,153,0.3);color:#a7f3d0;}
+  .float-bub.predict{border-style:dashed;opacity:0.72;} /* 预测建议:虚线更轻 */
   .float-bub:active{transform:scale(0.85);background:var(--primary);color:#fff;}
   .float-bub.fly{animation:bubFly .24s ease-in forwards;}
   @keyframes bubFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
@@ -688,11 +689,13 @@
     <div class="melody-panel">
     <div class="ctrls">
       <div class="seg-block">
-        <div class="seg-title">时值 <span class="k">长音用延音 — 拼</span></div>
+        <div class="seg-title">时值 <span class="k">— 延音=1拍</span></div>
         <div class="seg panel" id="rhythmRow">
           <button class="sel" data-dur="4">♩ 四分</button>
+          <button data-dur="4.">♩. 附点</button>
           <button data-dur="8">♪ 八分</button>
-          <button data-dur="16">♬ 十六分</button>
+          <button data-dur="8.">♪. 附点</button>
+          <button data-dur="16">♬ 十六</button>
         </div>
       </div>
       <div class="seg-block desk-only">
@@ -866,12 +869,14 @@
   function playGuitar(freq,durMs){pluck(freq,durMs,1);}
 
   // ═══ 状态 ═══
-  let melody=[],key='C',playing=false,timer=null,active=-1,rhythmDur=4,octave=0;
+  let melody=[],key='C',playing=false,timer=null,active=-1,rhythmDur='4',octave=0;
   let curIn=[],curOut=[],inBtns=[],outBtns=[];
   let caret=0;      // 插入光标(0..length):跟随录入
   let playStart=0;  // 播放起点(0..length):独立,默认开头,不跟随录入
   const BEAT_PX=46;  // 每拍像素宽,音符宽度=时值拍数×此值
-  function getDurMul(){return typeof rhythmDur==='string'?parseFloat(rhythmDur):rhythmDur;}
+  // data-dur → 拍数:4=1, 4.=1.5, 8=0.5, 8.=0.75, 16=0.25;durMul=4/拍数
+  const DUR_BEATS={'4':1,'4.':1.5,'8':0.5,'8.':0.75,'16':0.25};
+  function getDurMul(){return 4/(DUR_BEATS[rhythmDur]||1);}
 
   const $=s=>document.getElementById(s);
   const keySel=$('keySelect'),melodyBox=$('melodyBox');
@@ -1014,13 +1019,39 @@
   }
 
   // ═══ 音符操作 ═══
-  //  caret:统一光标(插入位置=播放起点);tryMode:试音模式;recentPool:漂浮气泡(最多3个)
-  let tryMode=false,recentPool=[];
+  //  caret:统一光标(插入位置=播放起点);tryMode:试音模式
+  //  气泡:试音态=最近点过;录入态=预测下一个音(调内随机,若光标处小节有和弦则偏向和弦内音)
+  let tryMode=false,recentPool=[],bubbleList=[];
   function pushRecent(note,label,inKey){
-    recentPool=recentPool.filter(r=>r.note!==note); // 去重,最近的排最前
+    recentPool=recentPool.filter(r=>r.note!==note);
     recentPool.unshift({note,label,freq:freq(note),inKey});
     if(recentPool.length>3)recentPool.pop();
-    renderRecentBubbles();
+  }
+  // 预测下一个音:优先当前音区调内音;若光标处有和弦,则偏向和弦内音
+  function predictNext(){
+    const inKeys=curIn.slice(); // 当前音区 7 个调内音 [note,label]
+    if(!inKeys.length)return [];
+    let pool=inKeys;
+    // 光标所在拍是否有和弦
+    const atBeat=melody.slice(0,Math.max(0,Math.min(caret,melody.length))).reduce((s,n)=>s+4/n.durMul,0);
+    const ci=(typeof chordAtBeat==='function')?chordAtBeat(atBeat):-1;
+    if(ci>=0&&chords[ci]){
+      const ch=chords[ci];const pcs=(QUAL_INT[ch.quality]||QUAL_INT.maj).map(s=>(ch.rootPC+s)%12);
+      const inChord=inKeys.filter(([n])=>pcs.includes(NS[n.replace(/\d/,'')]));
+      if(inChord.length)pool=inChord;
+    }
+    // 上一个音,避免重复;取 2 个不同的
+    const prev=melody[caret-1];const prevPc=prev&&!prev.rest?NS[prev.note.replace(/\d/,'')]:-1;
+    const cand=pool.filter(([n])=>NS[n.replace(/\d/,'')]!==prevPc);
+    const src=cand.length>=2?cand:pool;
+    const picks=[];const used={};
+    const n=isMobileMode?2:3;
+    let guard=0;
+    while(picks.length<n&&guard++<40){
+      const idx=Math.floor((picks.length*2.6+guard*1.7+atBeat*3)%src.length); // 伪随机但确定,避免每次渲染跳
+      const it=src[idx];if(it&&!used[it[0]]){used[it[0]]=1;picks.push({note:it[0],label:it[1],freq:freq(it[0]),inKey:true});}
+    }
+    return picks;
   }
   function insertItem(item){ // 插入到光标处,光标自动后移到新音之后
     const p=Math.max(0,Math.min(caret,melody.length));
@@ -1028,8 +1059,8 @@
   }
   function add(note,label,inKey){
     audio();const f=freq(note);
-    pushRecent(note,label,inKey); // 无论哪种模式,都记入"最近常点"
-    if(tryMode){playGuitar(f,280);return;} // 试音:只发声,不录入
+    pushRecent(note,label,inKey);
+    if(tryMode){playGuitar(f,280);renderRecentBubbles();return;} // 试音:只发声,刷新最近气泡
     insertItem({note,label,freq:f,inKey,durMul:getDurMul()});
     playGuitar(f,280);renderMelody();
   }
@@ -1038,16 +1069,16 @@
     insertItem({note:null,label:'0',freq:0,inKey:false,durMul:getDurMul(),rest:true});
     renderMelody();flash('休止符');
   }
-  function addTie(){ // 延音:按当前时值延长前一个音(四分=1拍,八分=0.5拍,十六分=0.25拍)
+  function addTie(){ // 延音:固定延长前一个音一个四分(1拍)
     if(tryMode){flash('试音模式不录入');return;}
     const prev=melody[Math.max(0,caret-1)];
     if(caret===0||!prev||prev.rest){flash('延音要接在音符后');return;}
-    const dm=getDurMul();
-    insertItem({note:null,label:'—',freq:0,inKey:false,durMul:dm,tie:true});
-    renderMelody();flash('延音 +'+(4/dm)+'拍');
+    insertItem({note:null,label:'—',freq:0,inKey:false,durMul:4,tie:true});
+    renderMelody();flash('延音 +1拍');
   }
-  function commitRecent(k,bubbleEl){ // 点漂浮气泡→飞入光标处
-    const t=recentPool[k];if(!t)return;
+  function commitRecent(k,bubbleEl){ // 点漂浮气泡→填入光标处
+    const t=bubbleList[k];if(!t)return;
+    if(tryMode){playGuitar(t.freq,280);return;} // 试音态点气泡=只发声
     insertItem({note:t.note,label:t.label,freq:t.freq,inKey:t.inKey,durMul:getDurMul()});
     playGuitar(t.freq,280);
     if(bubbleEl){bubbleEl.classList.add('fly');setTimeout(()=>renderMelody(),240);}else renderMelody();
@@ -1112,7 +1143,7 @@
     melodyBox.scrollLeft=Math.max(0,target);
   }
 
-  function beatName(d){return d===16?'十六分':d===8?'八分':'四分';}
+  function beatName(dm){const b=4/dm;return ({1:'四分',1.5:'附点四分',0.5:'八分',0.75:'附点八分',0.25:'十六分'})[b]||(b+'拍');}
 
   // 音符交互:锚点态=加/改和弦;其余(录入/试音)点击=删除
   function chipInteract(chip,i){
@@ -1159,16 +1190,16 @@
     bar.addEventListener('pointerup',end);bar.addEventListener('pointercancel',end);
   }
 
-  // ═══ 漂浮气泡(旋律框内置灰漂浮,点一下填入光标处) ═══
+  // ═══ 漂浮气泡:录入态=预测下一个音;试音态=最近点过 ═══
   function renderRecentBubbles(){
     melodyBox.querySelectorAll('.float-bub').forEach(b=>b.remove());
-    if(!recentPool.length)return;
-    const maxN=isMobileMode?2:3; // 移动端只飘2个
+    bubbleList=tryMode?recentPool.slice(0,isMobileMode?2:3):predictNext();
+    if(!bubbleList.length)return;
     const W=melodyBox.clientWidth||300;
-    recentPool.slice(0,maxN).forEach((r,k)=>{
-      const b=document.createElement('button');b.className='float-bub'+(r.inKey?'':' out');
-      b.textContent=r.label;b.title='填入 '+r.note;
-      b.style.left=(melodyBox.scrollLeft+W-40-k*46)+'px'; // 更靠右后
+    bubbleList.forEach((r,k)=>{
+      const b=document.createElement('button');b.className='float-bub'+(r.inKey?'':' out')+(tryMode?'':' predict');
+      b.textContent=r.label;b.title=(tryMode?'填入 ':'建议 ')+r.note;
+      b.style.left=(melodyBox.scrollLeft+W-40-k*46)+'px';
       b.style.top=(8+((k%2)*22))+'px';
       b.style.animationDelay=(k*0.5)+'s';
       b.addEventListener('click',ev=>{ev.stopPropagation();commitRecent(k,b);});
@@ -1472,7 +1503,7 @@
       selChordAt=snapBeat(xToBeat(ev.clientX-rect.left,segs));renderChordTrack();flash('已选位置 · 点下方和弦放入');
     };
     if(chordTrack)chordTrack.scrollLeft=melodyBox.scrollLeft;
-    if(ctInfo)ctInfo.textContent=chords.length?(chords.length+'个和弦 · 拖动可移位'):(timeSig+' · 点下方和弦开始(默认每小节一个)');
+    if(ctInfo)ctInfo.textContent=chords.length?(chords.length+'个和弦'):'';
   }
 
   // 和弦块交互:必须先按下(isDown)才响应移动;轻点=试听;拖动=移位;长按=加花/删除
@@ -1732,7 +1763,7 @@
 
   document.querySelectorAll('#rhythmRow button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('#rhythmRow button').forEach(x=>x.classList.remove('sel'));
-    b.classList.add('sel');const d=b.dataset.dur;rhythmDur=d==='4.'?'4.':parseInt(d);
+    b.classList.add('sel');rhythmDur=b.dataset.dur;
   }));
   document.querySelectorAll('#octaveRow button').forEach(t=>t.addEventListener('click',()=>{
     octave=parseInt(t.dataset.oct);renderNotes();flash(OCT_LABELS[octave]+'音区');
@@ -1743,6 +1774,7 @@
     tryMode=on;
     const chk=$('tryCheck');if(chk)chk.checked=on;
     document.body.classList.toggle('try-on',on);
+    renderRecentBubbles();
     flash(on?'试音:随便弹,不录入':'录入:点音符填入');
   }
 
