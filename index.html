@@ -189,17 +189,17 @@
 
   .note-chip{
     position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:flex-start;
-    height:38px;padding:0 6px;border-radius:var(--r-sm);
+    height:38px;padding:0 4px;border-radius:var(--r-sm);
     background:var(--surface);color:var(--fg);border:none;
     font-size:15px;font-weight:600;cursor:pointer;flex-shrink:0;box-sizing:border-box;
     box-shadow:var(--soft-sh-sm);
     transition:box-shadow .18s,background .18s;
     animation:chipIn .4s cubic-bezier(.34,1.56,.64,1);
   }
-  .note-chip .nl{flex-shrink:0;}
-  /* 时值拖尾 */
-  .note-chip .dur-tail{flex:1 1 auto;height:3px;margin-left:5px;border-radius:2px;
-    background:linear-gradient(90deg,rgba(143,194,220,0.55),rgba(143,194,220,0.08));min-width:6px;}
+  .note-chip .nl{flex-shrink:0;white-space:nowrap;}
+  /* 时值拖尾:表达音的长短(块越宽=音越长,尾越长) */
+  .note-chip .dur-tail{flex:1 1 auto;height:3px;margin-left:4px;border-radius:2px;
+    background:linear-gradient(90deg,rgba(143,194,220,0.55),rgba(143,194,220,0.08));min-width:0;}
   .note-chip.out-chip .dur-tail{background:linear-gradient(90deg,rgba(235,207,134,0.65),rgba(235,207,134,0.08));}
   @keyframes chipIn{from{opacity:0;transform:translateY(8px) scale(0.6)}to{opacity:1;transform:none}}
   .note-chip:active{box-shadow:var(--soft-sh-sm);}
@@ -1076,10 +1076,19 @@
   let curIn=[],curOut=[],inBtns=[],outBtns=[];
   let caret=0;      // 插入光标(0..length):跟随录入
   let playStart=0;  // 播放起点(0..length):独立,默认开头,不跟随录入
-  const BEAT_PX=46;  // 每拍像素宽,音符宽度=时值拍数×此值
+  const BEAT_PX=64;  // 每拍像素宽,音符宽度=时值拍数×此值(需足够大,使八分/十六分按比例区分)
   // data-dur → 拍数:4=1, 4.=1.5, 8=0.5, 8.=0.75, 16=0.25;durMul=4/拍数
   const DUR_BEATS={'4':1,'4.':1.5,'8':0.5,'8.':0.75,'16':0.25};
   function getDurMul(){return 4/(DUR_BEATS[rhythmDur]||1);}
+  // 音符块视觉宽度:分档而非严格比例。短音符也保底能放下标签+升降号,长音符压缩不至于过长。
+  function chipWidth(beats){
+    if(beats<=0.25)return 42;   // 十六
+    if(beats<=0.5) return 54;   // 八分
+    if(beats<=0.75)return 62;   // 附点八
+    if(beats<=1)   return 72;   // 四分(含延音1拍)
+    if(beats<=1.5) return 88;   // 附点四
+    return Math.min(140,88+(beats-1.5)*22); // 更长(多拍延音累积)
+  }
 
   const $=s=>document.getElementById(s);
   const melodyBox=$('melodyBox');
@@ -1311,10 +1320,11 @@
       if(i>0&&mm!==mcur){addMeasureTick(mm+1);mcur=mm;}
       const beats=noteBeats(n);
       const chip=document.createElement('span');chip.className='note-chip';
-      chip.style.width=Math.max(24,beats*BEAT_PX)+'px';
+      chip.style.width=chipWidth(beats)+'px';
       if(i===active)chip.classList.add('active');
       if(n.tie)chip.classList.add('tie');else if(n.rest)chip.classList.add('rest');else if(!n.inKey)chip.classList.add('out-chip');
-      chip.innerHTML='<span class="nl">'+n.label+'</span>'+(!n.tie&&beats>=1?'<span class="dur-tail"></span>':'');
+      // 音头(标签)固定宽度、永远包得住升降号;时值用右侧拖尾长短表达(非严格比例,视觉分档)
+      chip.innerHTML='<span class="nl">'+n.label+'</span>'+((!n.tie&&!n.rest)?'<span class="dur-tail"></span>':'');
       chip.title=(n.tie?'延音':n.rest?'休止符':n.note+' · '+beatName(n.durMul))+' — 点击删除';
       chipInteract(chip,i);
       melodyBox.appendChild(chip);
