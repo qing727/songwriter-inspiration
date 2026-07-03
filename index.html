@@ -143,11 +143,13 @@
     -webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain;
   }
   .stream::-webkit-scrollbar{display:none;}
-  /* 插入光标:天空蓝细线 */
-  .ins-caret{flex:0 0 auto;width:6px;align-self:stretch;margin:5px 0;cursor:pointer;position:relative;z-index:3;background:transparent;transition:background .15s;}
-  .ins-caret:hover{background:rgba(143,194,220,0.18);border-radius:3px;}
-  .ins-caret.on{width:2.5px;background:linear-gradient(180deg,var(--primary),rgba(143,194,220,0.4));
-    box-shadow:0 0 5px rgba(143,194,220,0.5);border-radius:2px;animation:caretBlink 1.1s ease-in-out infinite;}
+  /* 插入光标:视觉细线,但点击热区加宽(14px)便于点中,负边距不撑开音符 */
+  .ins-caret{flex:0 0 auto;width:14px;margin:0 -5px;align-self:stretch;cursor:pointer;position:relative;z-index:3;background:transparent;
+    display:flex;align-items:center;justify-content:center;}
+  .ins-caret::before{content:'';width:2.5px;align-self:stretch;margin:5px 0;border-radius:2px;background:transparent;transition:background .15s;}
+  .ins-caret:hover::before{background:rgba(143,194,220,0.35);}
+  .ins-caret.on::before{background:linear-gradient(180deg,var(--primary),rgba(143,194,220,0.4));
+    box-shadow:0 0 5px rgba(143,194,220,0.5);animation:caretBlink 1.1s ease-in-out infinite;}
   .ins-caret.on::after{content:'✎';position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--primary);}
   @keyframes caretBlink{0%,100%{opacity:1}50%{opacity:0.45}}
   /* 播放起点标记:暖黄小旗 */
@@ -1097,26 +1099,26 @@
     pushRecent(note,label,inKey);
     if(tryMode){playGuitar(f,280);renderRecentBubbles();return;} // 试音:只发声,刷新最近气泡
     insertItem({note,label,freq:f,inKey,durMul:getDurMul()});
-    playGuitar(f,280);renderMelody();
+    playGuitar(f,280);renderMelody();scrollToCaret();
   }
   function addRest(){
     if(tryMode){flash('试音模式不录入');return;}
     insertItem({note:null,label:'0',freq:0,inKey:false,durMul:getDurMul(),rest:true});
-    renderMelody();flash('休止符');
+    renderMelody();scrollToCaret();flash('休止符');
   }
   function addTie(){ // 延音:固定延长前一个音一个四分(1拍)
     if(tryMode){flash('试音模式不录入');return;}
     const prev=melody[Math.max(0,caret-1)];
     if(caret===0||!prev||prev.rest){flash('延音要接在音符后');return;}
     insertItem({note:null,label:'—',freq:0,inKey:false,durMul:4,tie:true});
-    renderMelody();flash('延音 +1拍');
+    renderMelody();scrollToCaret();flash('延音 +1拍');
   }
   function commitRecent(k,bubbleEl){ // 点漂浮气泡→填入光标处
     const t=bubbleList[k];if(!t)return;
     if(tryMode){playGuitar(t.freq,280);return;} // 试音态点气泡=只发声
     insertItem({note:t.note,label:t.label,freq:t.freq,inKey:t.inKey,durMul:getDurMul()});
     playGuitar(t.freq,280);
-    if(bubbleEl){bubbleEl.classList.add('fly');setTimeout(()=>renderMelody(),240);}else renderMelody();
+    if(bubbleEl){bubbleEl.classList.add('fly');setTimeout(()=>{renderMelody();scrollToCaret();},240);}else{renderMelody();scrollToCaret();}
   }
 
   function noteBeats(n){return 4/n.durMul;}
@@ -1163,19 +1165,23 @@
       const g=document.createElement('span');g.className='ghost-cell';g.style.width=BEAT_PX+'px';g.innerHTML='<span></span>';
       melodyBox.appendChild(g);gb+=1;
     }
+    const sl=melodyBox.scrollLeft; // 重建后保留滚动位置,不自动跳
     drawMelodyLine();
     renderPlayhead();
     renderRecentBubbles();
     if(typeof renderChordTrack==='function')renderChordTrack();
-    // 滚动锚定"最后一个音符",而非空拍末尾(未填满时不必滚到底)
-    if(!playing)scrollToLastNote();
+    if(!playing)melodyBox.scrollLeft=sl;
   }
-  function scrollToLastNote(){
+  // 把光标(插入位)滚进视野——仅"录入音符"后主动调用
+  function scrollToCaret(){
     const chips=melodyBox.querySelectorAll('.note-chip');
     if(!chips.length){melodyBox.scrollLeft=0;return;}
-    const last=chips[chips.length-1];
-    const target=last.offsetLeft+last.offsetWidth-melodyBox.clientWidth+40;
-    melodyBox.scrollLeft=Math.max(0,target);
+    const idx=Math.min(caret,chips.length)-1; // 刚插入的那个音
+    const chip=chips[Math.max(0,idx)];if(!chip)return;
+    const left=chip.offsetLeft,right=left+chip.offsetWidth;
+    const vl=melodyBox.scrollLeft,vr=vl+melodyBox.clientWidth;
+    if(right>vr-40)melodyBox.scrollLeft=right-melodyBox.clientWidth+60;
+    else if(left<vl+40)melodyBox.scrollLeft=Math.max(0,left-60);
   }
 
   function beatName(dm){const b=4/dm;return ({1:'四分',1.5:'附点四分',0.5:'八分',0.75:'附点八分',0.25:'十六分'})[b]||(b+'拍');}
@@ -1288,7 +1294,9 @@
       if(chords.length){playChordProgression();return;}
       flash('先录点音符或加个和弦');return;
     }
-    audio();playing=true;btnPlay.textContent='⏸';btnPlay.classList.add('playing');
+    if(timer){clearTimeout(timer);timer=null;} // 防御:清掉任何残留计时器
+    const a=audio();if(a.state==='suspended'){a.resume();} // 确保音频已唤醒
+    playing=true;btnPlay.textContent='⏸';btnPlay.classList.add('playing');
     renderMelody(); // 播放前完整渲染一次;之后只移动高亮,不再重建
     const bpm=parseInt(speedSlider.value),baseMs=(60/bpm)*1000;
     const startI=(playStart>=0&&playStart<melody.length)?playStart:0;
@@ -1674,7 +1682,9 @@
   function playChordProgression(){
     if(playing){stopPlayback();return;}
     if(!chords.length){flash('还没有和弦');return;}
-    audio();playing=true;btnPlay.textContent='⏸';btnPlay.classList.add('playing');
+    if(timer){clearTimeout(timer);timer=null;}
+    const a=audio();if(a.state==='suspended'){a.resume();}
+    playing=true;btnPlay.textContent='⏸';btnPlay.classList.add('playing');
     const bpm=parseInt(speedSlider.value),baseMs=(60/bpm)*1000;let j=0;
     function step(){
       if(!playing)return;
@@ -1851,9 +1861,12 @@
     timeSig=o.ts&&TS_LEN[o.ts]?o.ts:'4/4';
     {const ts=$('tsSelect');if(ts)ts.value=timeSig;}
     chords=Array.isArray(o.chordlist)?o.chordlist.map(deCh):[];
-    selChordAt=null;chordCursor=chords.length?(chords[chords.length-1].at+measureLen()):0;caret=0;playStart=0;
+    selChordAt=null;chordCursor=chords.length?(chords[chords.length-1].at+measureLen()):0;playStart=0;
     melody=o.notes.map(x=>({note:x.t||null,label:x.l,inKey:!!x.i,durMul:x.d||4,rest:!!x.r,tie:!!x.y,freq:x.t?freq(x.t):0}));
-    renderNotes();renderMelody();renderChordPal();renderChordTrack();return true;
+    caret=melody.length; // 载入后光标落在末尾,接着往后写
+    renderNotes();renderMelody();renderChordPal();renderChordTrack();
+    if(!playing)scrollToCaret(); // 视图定位到末尾光标
+    return true;
   }
   function dstr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
   function encShare(){return btoa(unescape(encodeURIComponent(JSON.stringify(serialize()))));}
