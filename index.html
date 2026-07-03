@@ -1080,11 +1080,11 @@
   // data-dur → 拍数:4=1, 4.=1.5, 8=0.5, 8.=0.75, 16=0.25;durMul=4/拍数
   const DUR_BEATS={'4':1,'4.':1.5,'8':0.5,'8.':0.75,'16':0.25};
   function getDurMul(){return 4/(DUR_BEATS[rhythmDur]||1);}
-  // 音符块视觉宽度:分档而非严格比例。短音符也保底能放下标签+升降号,长音符压缩不至于过长。
+  // 音符块视觉宽度:分档而非严格比例。最小宽度=音头(标签+升降号)不带拖尾的大小(十六分即此)。
   function chipWidth(beats){
-    if(beats<=0.25)return 42;   // 十六
-    if(beats<=0.5) return 54;   // 八分
-    if(beats<=0.75)return 62;   // 附点八
+    if(beats<=0.25)return 34;   // 十六:最小,仅音头无拖尾
+    if(beats<=0.5) return 50;   // 八分
+    if(beats<=0.75)return 60;   // 附点八
     if(beats<=1)   return 72;   // 四分(含延音1拍)
     if(beats<=1.5) return 88;   // 附点四
     return Math.min(140,88+(beats-1.5)*22); // 更长(多拍延音累积)
@@ -1323,8 +1323,8 @@
       chip.style.width=chipWidth(beats)+'px';
       if(i===active)chip.classList.add('active');
       if(n.tie)chip.classList.add('tie');else if(n.rest)chip.classList.add('rest');else if(!n.inKey)chip.classList.add('out-chip');
-      // 音头(标签)固定宽度、永远包得住升降号;时值用右侧拖尾长短表达(非严格比例,视觉分档)
-      chip.innerHTML='<span class="nl">'+n.label+'</span>'+((!n.tie&&!n.rest)?'<span class="dur-tail"></span>':'');
+      // 音头(标签)固定、永远包得住升降号;时值用右侧拖尾长短表达。十六分为最小音头,不带拖尾。
+      chip.innerHTML='<span class="nl">'+n.label+'</span>'+((!n.tie&&!n.rest&&beats>0.25)?'<span class="dur-tail"></span>':'');
       chip.title=(n.tie?'延音':n.rest?'休止符':n.note+' · '+beatName(n.durMul))+' — 点击删除';
       chipInteract(chip,i);
       melodyBox.appendChild(chip);
