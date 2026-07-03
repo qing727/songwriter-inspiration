@@ -573,23 +573,27 @@
   /* ══ 和弦盘 ══ */
   .chord-pal-label{font-size:9.5px;color:var(--fg-muted);letter-spacing:2px;text-transform:uppercase;font-weight:600;padding-left:4px;display:flex;align-items:center;gap:8px;}
   .chord-pal-label .tip{font-size:9px;letter-spacing:0;text-transform:none;font-weight:500;color:var(--fg-dim);background:var(--glass);border:1px solid var(--glass-brd-soft);border-radius:6px;padding:1px 7px;}
-  .chord-pal{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
-  /* 桌面:和弦区窄列,竖排一列 */
-  body.is-desktop .chord-pal{grid-template-columns:repeat(2,1fr);gap:9px;}
-  body.is-desktop .chord-btn{flex-direction:column;justify-content:center;gap:3px;padding:11px 10px;height:auto;min-height:50px;}
+  .chord-pal{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;}
+  /* 桌面:和弦区窄列 */
+  body.is-desktop .chord-pal{grid-template-columns:repeat(2,1fr);gap:14px;}
+  body.is-desktop .chord-btn{flex-direction:column;justify-content:center;gap:3px;padding:12px 10px;height:auto;min-height:50px;}
   body.is-desktop .chord-btn .cn{font-size:18px;}
   body.is-desktop .chord-btn .rn{font-size:10.5px;}
+  /* 功能色半透明底(同上方和弦块的 button 感,无左侧竖条),底色比和弦块更浅 */
   .chord-btn{position:relative;overflow:hidden;border:none;font-family:var(--font);cursor:pointer;border-radius:var(--r-md);
-    padding:11px 6px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:12px 8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    background:var(--glass);box-shadow:var(--soft-sh-sm);color:var(--ink-blue);
     transition:transform .1s cubic-bezier(.34,1.56,.64,1),filter .15s,box-shadow .2s;}
   .chord-btn:active{transform:scale(0.92);}
-  .chord-btn.hit{filter:brightness(1.2);}
+  .chord-btn.hit{filter:brightness(1.05);box-shadow:var(--soft-sh);}
   .chord-btn .cn{font-size:16px;font-weight:700;line-height:1;}
   .chord-btn .rn{font-size:9px;font-weight:500;opacity:0.7;}
-  .chord-btn .flower{position:absolute;top:3px;right:5px;font-size:8px;opacity:0.5;}
-  .chord-btn.func-T{background:linear-gradient(150deg,#CDE7F4,#AFD6EA);color:#3E6D86;box-shadow:var(--soft-sh-sm);}
-  .chord-btn.func-SD{background:linear-gradient(150deg,#F7DDE4,#EEC7D2);color:#A65E72;box-shadow:var(--soft-sh-sm);}
-  .chord-btn.func-D{background:linear-gradient(150deg,#F8EAC0,#F0DDA0);color:#9A7B2E;box-shadow:var(--soft-sh-sm);}
+  .chord-btn.func-T{background:rgba(143,194,220,0.14);}
+  .chord-btn.func-SD{background:rgba(234,199,208,0.16);}
+  .chord-btn.func-D{background:rgba(235,207,134,0.16);}
+  .chord-btn.func-T .cn{color:#3E7A9C;}
+  .chord-btn.func-SD .cn{color:#B06A7E;}
+  .chord-btn.func-D .cn{color:#A98A3A;}
 
   /* 加花弹窗 */
   .var-pop{display:flex;flex-direction:column;gap:9px;}
@@ -653,6 +657,25 @@
     .aurora span,.brand .orb,.note-chip.active,.note-chip{animation:none!important;}
     *{transition-duration:.01ms!important;}
   }
+  /* 调性弹窗 */
+  .key-btn{min-width:70px;}
+  .kp-label{font-size:11px;font-weight:700;color:var(--fg-muted);letter-spacing:1px;margin:14px 2px 7px;}
+  .kp-grid{display:grid;gap:7px;}
+  .kp-grid.tonics{grid-template-columns:repeat(6,1fr);}
+  .kp-grid.modes{grid-template-columns:repeat(3,1fr);}
+  .kp-btn{border:none;background:var(--glass-2);color:var(--fg);border-radius:10px;padding:9px 4px;font-family:var(--font);
+    font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--soft-sh-sm);transition:all .15s;}
+  .kp-btn.wide{font-size:12px;}
+  .kp-btn.on{background:linear-gradient(140deg,var(--primary),var(--primary-deep));color:#fff;}
+  .kp-btn:active{transform:scale(0.93);}
+  .kp-capo{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:4px;}
+  .kp-cbtn{width:38px;height:38px;border-radius:12px;border:none;background:var(--glass-2);color:var(--primary-deep);
+    font-size:22px;font-weight:700;cursor:pointer;box-shadow:var(--soft-sh-sm);}
+  .kp-cbtn:active{transform:scale(0.9);}
+  #capoVal{font-size:14px;font-weight:700;color:var(--ink-blue);min-width:74px;text-align:center;}
+  .kp-ai{width:100%;margin-top:16px;padding:12px;border-radius:14px;border:none;font-family:var(--font);font-size:14px;font-weight:700;cursor:pointer;
+    background:linear-gradient(140deg,var(--accent),var(--accent-deep));color:#fff;box-shadow:var(--soft-sh-sm);}
+  .kp-ai.disabled{background:var(--glass-2);color:var(--fg-muted);cursor:not-allowed;box-shadow:none;font-size:12.5px;}
 </style>
 </head>
 <body>
@@ -666,16 +689,7 @@
       <span class="txt"><b>写歌灵感</b><small>stream of melody</small></span>
     </div>
     <div class="key-wrap">
-      <select id="keySelect" aria-label="调性选择">
-        <option value="C">C 大调</option>
-        <option value="G">G 大调</option>
-        <option value="D">D 大调</option>
-        <option value="F">F 大调</option>
-        <option value="Am">A 小调</option>
-        <option value="Em">E 小调</option>
-        <option value="Dm">D 小调</option>
-      </select>
-      <button class="hdr-btn" id="btnAI" title="AI 判调">✨判调</button>
+      <button class="hdr-btn key-btn" id="keyBtn" title="选择调性 / 升降调 / 判调">C大调</button>
       <button class="hdr-btn" id="btnStore" title="收藏">♡收藏</button>
     </div>
   </div>
@@ -805,7 +819,6 @@
         <button class="mini-btn" id="btnChordClear">清空和弦</button>
       </div>
       <div>
-        <div class="chord-pal-label in"><span id="palHint">点和弦=填入(不选位置默认每小节一个)</span><span class="tip">长按加花 · 拖左边缘移位</span></div>
         <div class="chord-pal" id="chordPal"></div>
       </div>
     </div>
@@ -819,34 +832,74 @@
 <div class="ai-overlay" id="varOverlay"><div class="ai-card" id="varCard"></div></div>
 <div class="ai-overlay" id="progOverlay"><div class="ai-card" id="progCard"></div></div>
 <div class="ai-overlay" id="pickOverlay"><div class="ai-card" id="pickCard"></div></div>
+<div class="ai-overlay" id="keyOverlay"><div class="ai-card" id="keyCard"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 (function(){
   const NS={'C':0,'C#':1,'Db':1,'D':2,'D#':3,'Eb':3,'E':4,'F':5,'F#':6,'Gb':6,'G':7,'G#':8,'Ab':8,'A':9,'A#':10,'Bb':10,'B':11};
   function freq(n){const m=n.match(/^([A-G][#b]?)(\d)$/);return m?440*Math.pow(2,((parseInt(m[2])+1)*12+NS[m[1]]-69)/12):440;}
+  // 变调夹:显示音名不变,只把实际发声音高整体升降 capo 个半音
+  function soundFreq(n){const m=n&&n.match(/^([A-G][#b]?)(\d)$/);if(!m)return 0;const midi=(parseInt(m[2])+1)*12+NS[m[1]];return 440*Math.pow(2,(midi+capo-69)/12);}
 
-  const SCALES={
-    'C':{name:'C大调', inKey:[['C4','1'],['D4','2'],['E4','3'],['F4','4'],['G4','5'],['A4','6'],['B4','7']], outKey:[['C#4','#1'],['D#4','#2'],['F#4','#4'],['G#4','#5'],['A#4','#6']]},
-    'G':{name:'G大调', inKey:[['G3','1'],['A3','2'],['B3','3'],['C4','4'],['D4','5'],['E4','6'],['F#4','7']], outKey:[['G#3','#1'],['A#3','#2'],['C#4','#4'],['D#4','#5'],['G#4','#1']]},
-    'D':{name:'D大调', inKey:[['D4','1'],['E4','2'],['F#4','3'],['G4','4'],['A4','5'],['B4','6'],['C#5','7']], outKey:[['D#4','b3'],['G#4','#4'],['A#4','#5'],['C5','b7'],['D#5','#2']]},
-    'F':{name:'F大调', inKey:[['F4','1'],['G4','2'],['A4','3'],['Bb4','4'],['C5','5'],['D5','6'],['E5','7']], outKey:[['F#4','#1'],['G#4','#2'],['B4','#4'],['C#5','#5'],['D#5','#6']]},
-    'Am':{name:'A小调', inKey:[['A3','1'],['B3','2'],['C4','3'],['D4','4'],['E4','5'],['F4','6'],['G4','7']], outKey:[['A#3','#1'],['C#4','#3'],['D#4','#4'],['F#4','#6'],['G#4','#7']]},
-    'Em':{name:'E小调', inKey:[['E4','1'],['F#4','2'],['G4','3'],['A4','4'],['B4','5'],['C5','6'],['D5','7']], outKey:[['F4','b2'],['G#4','#3'],['A#4','#4'],['C#5','#6'],['D#5','#7']]},
-    'Dm':{name:'D小调', inKey:[['D4','1'],['E4','2'],['F4','3'],['G4','4'],['A4','5'],['Bb4','6'],['C5','7']], outKey:[['D#4','#1'],['F#4','#3'],['G#4','#4'],['B4','#6'],['C#5','#7']]}
+  // ═══ 音乐引擎:主音 + 调式 + 变调夹,动态生成音阶 ═══
+  const NAMES=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+  const OVL='̲',OVH='̄'; // 低音下划线 / 高音上划线
+  function midiName(m){return NAMES[((m%12)+12)%12]+(Math.floor(m/12)-1);}
+  // 各调式:相对主音的半音音程 + 每级简谱标签 + 配和弦用的7音母音阶
+  const MODES={
+    major:{name:'大调',iv:[0,2,4,5,7,9,11],lab:['1','2','3','4','5','6','7'],parent:'major'},
+    minor:{name:'小调',iv:[0,2,3,5,7,8,10],lab:['1','2','b3','4','5','b6','b7'],parent:'minor'},
+    dorian:{name:'多利安',iv:[0,2,3,5,7,9,10],lab:['1','2','b3','4','5','6','b7'],parent:'dorian'},
+    mixo:{name:'混合利底亚',iv:[0,2,4,5,7,9,10],lab:['1','2','3','4','5','6','b7'],parent:'mixo'},
+    majPenta:{name:'大调五声',iv:[0,2,4,7,9],lab:['1','2','3','5','6'],parent:'major'},
+    minPenta:{name:'小调五声',iv:[0,3,5,7,10],lab:['1','b3','4','5','b7'],parent:'minor'},
+    blues:{name:'布鲁斯',iv:[0,3,5,6,7,10],lab:['1','b3','4','#4','5','b7'],parent:'minor'}
   };
-
-  const OCT={
-    'C':{down:[['C3','1̲'],['D3','2̲'],['E3','3̲'],['F3','4̲'],['G3','5̲'],['A3','6̲'],['B3','7̲']],up:[['C5','1̄'],['D5','2̄'],['E5','3̄'],['F5','4̄'],['G5','5̄'],['A5','6̄'],['B5','7̄']]},
-    'G':{down:[['G2','1̲'],['A2','2̲'],['B2','3̲'],['C3','4̲'],['D3','5̲'],['E3','6̲'],['F#3','7̲']],up:[['G4','1̄'],['A4','2̄'],['B4','3̄'],['C5','4̄'],['D5','5̄'],['E5','6̄'],['F#5','7̄']]},
-    'D':{down:[['D3','1̲'],['E3','2̲'],['F#3','3̲'],['G3','4̲'],['A3','5̲'],['B3','6̲'],['C#4','7̲']],up:[['D5','1̄'],['E5','2̄'],['F#5','3̄'],['G5','4̄'],['A5','5̄'],['B5','6̄'],['C#6','7̄']]},
-    'F':{down:[['F3','1̲'],['G3','2̲'],['A3','3̲'],['Bb3','4̲'],['C4','5̲'],['D4','6̲'],['E4','7̲']],up:[['F5','1̄'],['G5','2̄'],['A5','3̄'],['Bb5','4̄'],['C6','5̄'],['D6','6̄'],['E6','7̄']]},
-    'Am':{down:[['A2','1̲'],['B2','2̲'],['C3','3̲'],['D3','4̲'],['E3','5̲'],['F3','6̲'],['G3','7̲']],up:[['A4','1̄'],['B4','2̄'],['C5','3̄'],['D5','4̄'],['E5','5̄'],['F5','6̄'],['G5','7̄']]},
-    'Em':{down:[['E3','1̲'],['F#3','2̲'],['G3','3̲'],['A3','4̲'],['B3','5̲'],['C4','6̲'],['D4','7̲']],up:[['E5','1̄'],['F#5','2̄'],['G5','3̄'],['A5','4̄'],['B5','5̄'],['C6','6̄'],['D6','7̄']]},
-    'Dm':{down:[['D3','1̲'],['E3','2̲'],['F3','3̲'],['G3','4̲'],['A3','5̲'],['Bb3','6̲'],['C4','7̲']],up:[['D5','1̄'],['E5','2̄'],['F5','3̄'],['G5','4̄'],['A5','5̄'],['Bb5','6̄'],['C6','7̄']]}
-  };
-
+  const PARENT7={major:[0,2,4,5,7,9,11],minor:[0,2,3,5,7,8,10],dorian:[0,2,3,5,7,9,10],mixo:[0,2,4,5,7,9,10]};
   const OCT_LABELS={'-1':'低','0':'中','1':'高'};
+
+  let tonicPC=0,modeId='major',capo=0; // 主音音级 / 调式 / 变调夹(半音)
+  let SCALES={},OCT={},CURCHORDS=[];
+  function tonicName(){return NAMES[tonicPC];}
+  function keyStr(){return tonicName()+'|'+modeId;} // 内部 key 标识
+  function keyDisplay(){return tonicName()+MODES[modeId].name;}
+  function mark(lab,oct){return oct===-1?lab+OVL:oct===1?lab+OVH:lab;} // 加八度记号
+  function buildScaleArr(baseMidi,mode,octMark){
+    return mode.iv.map((s,i)=>[midiName(baseMidi+s),octMark?mark(mode.lab[i],octMark):mode.lab[i]]);
+  }
+  function buildOutArr(baseMidi,mode){
+    const set=new Set(mode.iv),out=[];
+    for(let s=0;s<12;s++){ if(set.has(s))continue;
+      let lab,lo=s-1;while(lo>=0&&!set.has(lo))lo--;let hi=s+1;while(hi<12&&!set.has(hi))hi++;
+      if(lo>=0)lab='#'+mode.lab[mode.iv.indexOf(lo)];
+      else if(hi<12)lab='b'+mode.lab[mode.iv.indexOf(hi)];
+      else lab='#'+s;
+      out.push([midiName(baseMidi+s),lab]);
+    }
+    return out;
+  }
+  function buildChords(){
+    const par=PARENT7[MODES[modeId].parent]||PARENT7.major;
+    const isMin=(MODES[modeId].parent==='minor'||MODES[modeId].parent==='dorian');
+    const romMaj=['I','ii','iii','IV','V','vi','vii°'],romMin=['i','ii°','III','iv','v','VI','VII'];
+    const FUNC=['T','SD','T','SD','D','T','D'],ch=[];
+    for(let i=0;i<7;i++){
+      const rpc=(tonicPC+par[i])%12;
+      const third=(par[(i+2)%7]+(i+2>=7?12:0))-par[i];
+      const fifth=(par[(i+4)%7]+(i+4>=7?12:0))-par[i];
+      let q='maj';
+      if(third===3&&fifth===7)q='min';else if(third===3&&fifth===6)q='dim';else q='maj';
+      ch.push({rootLetter:NAMES[rpc],rootPC:rpc,quality:q,roman:(isMin?romMin:romMaj)[i],func:FUNC[i],degree:i});
+    }
+    return ch;
+  }
+  function rebuildKey(){
+    const mode=MODES[modeId],baseMidi=60+tonicPC,k=keyStr();
+    const scale={name:keyDisplay(),inKey:buildScaleArr(baseMidi,mode,0),outKey:buildOutArr(baseMidi,mode)};
+    const oct={down:buildScaleArr(baseMidi-12,mode,-1),up:buildScaleArr(baseMidi+12,mode,1)};
+    SCALES={};SCALES[k]=scale;OCT={};OCT[k]=oct;CURCHORDS=buildChords();key=k;
+  }
 
   // ═══ 柔和拨弦音色 · 谐波加法合成 + 轻量短混响(无噪声) ═══
   let ctx=null,busDry=null,busWet=null;
@@ -860,7 +913,7 @@
   function audio(){
     if(!ctx){
       ctx=new(window.AudioContext||window.webkitAudioContext)();
-      const master=ctx.createGain();master.gain.value=0.85;master.connect(ctx.destination);
+      const master=ctx.createGain();master.gain.value=1.1;master.connect(ctx.destination);
       // 柔化高频尖刺
       const soft=ctx.createBiquadFilter();soft.type='lowpass';soft.frequency.value=5200;soft.Q.value=0.4;soft.connect(master);
       busDry=ctx.createGain();busDry.gain.value=1.0;busDry.connect(soft);
@@ -885,7 +938,7 @@
     const a=audio(),t=a.currentTime,dur=Math.max(0.18,Math.min(1.6,durMs/1000));
     vel=vel||1;
     const partials=[[1,1.0],[2,0.42],[3,0.20],[4,0.10],[5,0.05]]; // 谐波:泛音随次数递减
-    const amp=a.createGain();amp.gain.value=0.26*vel;
+    const amp=a.createGain();amp.gain.value=0.34*vel;
     partials.forEach(([mul,lv])=>{
       const o=a.createOscillator();o.type='sine';o.frequency.setValueAtTime(freq*mul,t);
       const g=a.createGain();
@@ -916,10 +969,10 @@
   function getDurMul(){return 4/(DUR_BEATS[rhythmDur]||1);}
 
   const $=s=>document.getElementById(s);
-  const keySel=$('keySelect'),melodyBox=$('melodyBox');
+  const melodyBox=$('melodyBox');
   const inKeyRow=$('inKeyRow'),outKeyRow=$('outKeyRow'),restBtn=$('restBtn'),tieBtn=$('tieBtn');
   const btnPlay=$('btnPlay'),btnStop=$('btnStop'),speedSlider=$('speedSlider'),bpmVal=$('bpmVal'),loopCheck=$('loopCheck');
-  const btnUndo=$('btnUndo'),btnClear=$('btnClear'),btnAI=$('btnAI'),toast=$('toast');
+  const toast=$('toast');
   const aiOverlay=$('aiOverlay'),aiCard=$('aiCard');
   const octStage=$('octStage'),octCards=$('octCards'),octName=$('octName'),restBtnM=$('restBtnM');
   const btnStore=$('btnStore'),storeOverlay=$('storeOverlay'),storeCard=$('storeCard');
@@ -1061,7 +1114,7 @@
   let tryMode=false,recentPool=[],bubbleList=[];
   function pushRecent(note,label,inKey){
     recentPool=recentPool.filter(r=>r.note!==note);
-    recentPool.unshift({note,label,freq:freq(note),inKey});
+    recentPool.unshift({note,label,freq:soundFreq(note),inKey});
     if(recentPool.length>3)recentPool.pop();
   }
   // 预测下一个音:优先当前音区调内音;若光标处有和弦,则偏向和弦内音
@@ -1086,7 +1139,7 @@
     let guard=0;
     while(picks.length<n&&guard++<40){
       const idx=Math.floor((picks.length*2.6+guard*1.7+atBeat*3)%src.length); // 伪随机但确定,避免每次渲染跳
-      const it=src[idx];if(it&&!used[it[0]]){used[it[0]]=1;picks.push({note:it[0],label:it[1],freq:freq(it[0]),inKey:true});}
+      const it=src[idx];if(it&&!used[it[0]]){used[it[0]]=1;picks.push({note:it[0],label:it[1],freq:soundFreq(it[0]),inKey:true});}
     }
     return picks;
   }
@@ -1095,7 +1148,7 @@
     melody.splice(p,0,item);caret=p+1;
   }
   function add(note,label,inKey){
-    audio();const f=freq(note);
+    audio();const f=soundFreq(note);
     pushRecent(note,label,inKey);
     if(tryMode){playGuitar(f,280);renderRecentBubbles();return;} // 试音:只发声,刷新最近气泡
     insertItem({note,label,freq:f,inKey,durMul:getDurMul()});
@@ -1326,64 +1379,48 @@
   }
 
   // ═══ AI 判调 ═══
+  // 判调:对 12 主音 × {大调,小调} 打分(动态生成音级集,不依赖多调表)
   function analyzeKey(){
-    const notes=melody.filter(n=>!n.rest);
+    const notes=melody.filter(n=>!n.rest&&!n.tie);
     if(notes.length<3)return null;
-    const noteCount={};
-    notes.forEach(n=>{const nn=n.note.replace(/\d/,'');noteCount[nn]=(noteCount[nn]||0)+1;});
-    const total=notes.length;
-    const candidates=Object.entries(SCALES).map(([k,scale])=>{
-      const inKeySet=new Set(scale.inKey.map(([n])=>n.replace(/\d/,'')));
-      let inCount=0;
-      Object.entries(noteCount).forEach(([nn,cnt])=>{if(inKeySet.has(nn))inCount+=cnt;});
-      const coverage=inCount/total;
-      const tonicNote=scale.inKey[0][0].replace(/\d/,'');
-      const tonicCount=noteCount[tonicNote]||0;
-      const tonicWeight=tonicCount/total;
-      const lastNote=notes[notes.length-1].note.replace(/\d/,'');
-      const firstNote=notes[0].note.replace(/\d/,'');
-      const endsOnTonic=(lastNote===tonicNote)?1:0;
-      const startsOnTonic=(firstNote===tonicNote)?0.5:0;
-      let score=Math.round((coverage*0.50+tonicWeight*0.30+(endsOnTonic*0.15+startsOnTonic*0.05))*100);
-      let unusedDegrees=0;
-      scale.inKey.forEach(([n])=>{if(!noteCount[n.replace(/\d/,'')])unusedDegrees++;});
-      score-=unusedDegrees*4;
-      if(scale.name.includes('大调')){
-        const fourth=scale.inKey[3][0].replace(/\d/,'');
-        if(!noteCount[fourth])score-=12;
-        const seventh=scale.inKey[6][0].replace(/\d/,'');
-        if(!noteCount[seventh])score-=6;
+    const cnt={};let total=0;
+    notes.forEach(n=>{const pc=NS[n.note.replace(/\d/,'')];if(pc!=null){cnt[pc]=(cnt[pc]||0)+1;total++;}});
+    const firstPc=NS[notes[0].note.replace(/\d/,'')],lastPc=NS[notes[notes.length-1].note.replace(/\d/,'')];
+    const cand=[];
+    [['major','大调',[0,2,4,5,7,9,11]],['minor','小调',[0,2,3,5,7,8,10]]].forEach(([mid,mnm,iv])=>{
+      for(let t=0;t<12;t++){
+        const set=new Set(iv.map(s=>(t+s)%12));
+        let inC=0;Object.entries(cnt).forEach(([pc,c])=>{if(set.has(+pc))inC+=c;});
+        const cov=inC/total,tw=(cnt[t]||0)/total;
+        const endsT=(lastPc===t)?1:0,startsT=(firstPc===t)?0.5:0;
+        let score=Math.round((cov*0.55+tw*0.28+endsT*0.12+startsT*0.05)*100);
+        let unused=0;iv.forEach(s=>{if(!cnt[(t+s)%12])unused++;});score-=unused*3;
+        cand.push({tonic:t,mode:mid,name:NAMES[t]+mnm,score:Math.max(0,Math.min(100,score))});
       }
-      return{key:k,name:scale.name,score:Math.max(0,score),coverage:Math.round(coverage*100),tonicWeight:Math.round(tonicWeight*100)};
     });
-    candidates.sort((a,b)=>b.score-a.score);
-    return candidates;
+    cand.sort((a,b)=>b.score-a.score);return cand;
   }
-
   function showAIResult(){
     const result=analyzeKey();
     if(!result){flash('至少录入3个音符才能判调');return;}
-    const best=result[0];const curName=SCALES[key].name;const isBest=best.key===key;
+    const best=result[0];const isBest=(best.tonic===tonicPC&&best.mode===modeId);
     let html='<h3>✨ AI 调性分析</h3>';
-    html+='<div class="ai-desc">基于 <b>'+melody.filter(n=>!n.rest).length+'</b> 个音符,综合音名覆盖 + 主音重心 + 缺省音级分析:</div>';
+    html+='<div class="ai-desc">基于 <b>'+melody.filter(n=>!n.rest&&!n.tie).length+'</b> 个音符,综合音名覆盖 + 主音重心分析:</div>';
     html+='<div class="ai-match">';
     result.slice(0,5).forEach(r=>{
-      const cls=(r.key===key?'current':'')+((r===best)?' best':'');
+      const cls=((r.tonic===tonicPC&&r.mode===modeId)?'current':'')+((r===best)?' best':'');
       html+='<div class="ai-match-item '+cls.trim()+'"><span class="kn">'+r.name+'</span><span class="ks">'+r.score+'%</span></div>';
     });
     html+='</div>';
-    if(isBest){
-      html+='<div class="ai-hint">当前「'+curName+'」综合得分最高,与旋律的主音重心吻合。</div>';
-    }else{
-      html+='<div class="ai-hint">推荐切换至 <b style="color:var(--primary-soft);">「'+best.name+'」</b>(得分 '+best.score+'%)。</div>';
-      html+='<button class="ai-apply" id="aiApply">切换至 '+best.name+'</button>';
-    }
+    if(isBest)html+='<div class="ai-hint">当前「'+keyDisplay()+'」得分最高,与旋律主音重心吻合。</div>';
+    else{html+='<div class="ai-hint">推荐切换至 <b style="color:var(--primary-deep);">「'+best.name+'」</b>(得分 '+best.score+'%)。</div>';
+      html+='<button class="ai-apply" id="aiApply">切换至 '+best.name+'</button>';}
     html+='<button class="ai-close" id="aiClose">关闭</button>';
     aiCard.innerHTML=html;aiOverlay.classList.add('show');
     setTimeout(()=>{
       const bc=$('aiClose'),ba=$('aiApply');
       if(bc)bc.addEventListener('click',()=>aiOverlay.classList.remove('show'));
-      if(ba)ba.addEventListener('click',()=>{remapKey(best.key);aiOverlay.classList.remove('show');flash('已切换至 '+best.name);});
+      if(ba)ba.addEventListener('click',()=>{applyKey(best.tonic,best.mode,capo);aiOverlay.classList.remove('show');flash('已切换至 '+best.name);});
     },50);
   }
 
@@ -1424,15 +1461,11 @@
     {name:'1-7-6-5(下行)',key:'major',degs:[0,6,5,4],desc:'下行低音线,深情感伤'}
   ];
 
-  function diatonicChords(k){
-    const scale=SCALES[k].inKey.map(([n])=>n.replace(/\d/,''));
-    const minor=isMinorKey(k),qual=minor?MIN_QUAL:MAJ_QUAL,roman=minor?MIN_ROMAN:MAJ_ROMAN,func=minor?MIN_FUNC:MAJ_FUNC;
-    return scale.map((letter,i)=>({rootLetter:letter,rootPC:PC[letter],quality:qual[i],roman:roman[i],func:func[i],degree:i}));
-  }
+  function diatonicChords(k){return CURCHORDS.map(c=>Object.assign({},c));} // 当前调式的级数和弦
   function chordName(c){return c.rootLetter+(QUAL_SUFFIX[c.quality]||'');}
   function chordFreqs(c){
-    // 和弦根音统一收拢到 C3–B3 低音区,各调一致地落在旋律下方作伴奏
-    const rootMidi=48+(c.rootPC%12);
+    // 和弦根音收拢到 C3–B3 低音区 + 变调夹整体升降
+    const rootMidi=48+(c.rootPC%12)+capo;
     return (QUAL_INT[c.quality]||QUAL_INT.maj).map(s=>440*Math.pow(2,(rootMidi+s-69)/12));
   }
   function playChord(c,durMs,arp){
@@ -1618,7 +1651,8 @@
       b.addEventListener('pointerdown',e=>{fired=false;px=e.clientX;py=e.clientY;
         lp=setTimeout(()=>{fired=true;if(navigator.vibrate)navigator.vibrate(14);openVariants(c,-1);},460);});
       b.addEventListener('pointermove',e=>{if(lp&&Math.hypot(e.clientX-px,e.clientY-py)>10){clearTimeout(lp);lp=null;}});
-      b.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;}if(!fired){hit(b);fillChord(c);}});
+      b.addEventListener('pointerup',()=>{if(lp){clearTimeout(lp);lp=null;}if(!fired){hit(b);
+        if(tryMode){playChord(c,700,true);}else{fillChord(c);}}}); // 试音态:只发声不填入
       b.addEventListener('pointercancel',()=>{if(lp){clearTimeout(lp);lp=null;}});
       chordPal.appendChild(b);
     });
@@ -1626,7 +1660,7 @@
 
   // 加花:target>=0 改已有和弦 i;target=-1 表示对和弦盘按钮长按(新建变体到选中位)
   function openVariants(baseC,target){
-    const triadQual=(isMinorKey(key)?MIN_QUAL:MAJ_QUAL)[baseC.degree];
+    const triadQual=(CURCHORDS[baseC.degree]||{}).quality||'maj';
     const vars=variantsFor(triadQual);
     const curQual=(target>=0&&chords[target])?chords[target].quality:baseC.quality;
     let html='<div class="var-pop"><div class="vp-head">为 <b>'+baseC.rootLetter+'</b>('+baseC.roman+')加花 · 选一种色彩</div><div class="var-grid">';
@@ -1656,7 +1690,7 @@
   // ═══ L2 经典进行套路(铺成一小节一个) ═══
   const progOverlay=$('progOverlay'),progCard=$('progCard');
   function openProgressions(){
-    const minorK=isMinorKey(key);
+    const minorK=(MODES[modeId].parent==='minor');
     let html='<h3>🎼 经典和弦进行</h3><div class="ai-desc">一键铺成每小节一个和弦,可再拖动/替换</div><div class="prog-list">';
     PROGRESSIONS.forEach((p,pi)=>{
       const dia=diatonicChords(key);const preview=p.degs.map(d=>chordName(dia[d])).join(' - ');
@@ -1774,35 +1808,63 @@
     if(/^[1-7]$/.test(base))return{deg:parseInt(base)-1,oct:oct,inKey:true};
     return{inKey:false};
   }
-  function remapKey(nk){
-    const oldK=key;if(nk===oldK)return;
-    const oldTonic=PC[SCALES[oldK].inKey[0][0].replace(/\d/,'')];
-    const newTonic=PC[SCALES[nk].inKey[0][0].replace(/\d/,'')];
-    const semis=((newTonic-oldTonic)%12+12)%12;
-    // 旋律:调内音按级数重映射到新调;调外音按主音音程平移
+  // 切换主音/调式/变调夹后:重建音阶,按简谱标签把旋律重映射到新调式,和弦按级数重映射
+  function applyKey(nTonic,nMode,nCapo){
+    const oldQual=CURCHORDS.map(c=>c.quality); // 旧调式各级基本三和弦(用于识别未加花的和弦)
+    tonicPC=((nTonic%12)+12)%12;modeId=nMode in MODES?nMode:'major';capo=nCapo|0;
+    rebuildKey();
+    // 建 标签→音符 映射表(含高低音区 + 调外)
+    const cur=SCALES[key],oc=OCT[key],labMap={};
+    const put=arr=>arr.forEach(([n,l])=>{if(!(l in labMap))labMap[l]=n;});
+    put(cur.inKey);put(cur.outKey);put(oc.down);put(oc.up);
     melody=melody.map(n=>{
-      if(n.rest)return n;
-      const p=parseDeg(n.label);
-      if(p.inKey&&p.deg!=null){
-        const arr=p.oct===-1?(OCT[nk]?OCT[nk].down:SCALES[nk].inKey):p.oct===1?(OCT[nk]?OCT[nk].up:SCALES[nk].inKey):SCALES[nk].inKey;
-        const pair=arr[p.deg];if(pair)return Object.assign({},n,{note:pair[0],label:pair[1],inKey:true,freq:freq(pair[0])});
-      }
-      const nn=transposeNote(n.note,semis);
-      return Object.assign({},n,{note:nn,freq:freq(nn)});
+      if(n.rest||n.tie)return n;
+      const nn=labMap[n.label];
+      if(nn){const isIn=cur.inKey.concat(oc.down,oc.up).some(([,l])=>l===n.label);
+        return Object.assign({},n,{note:nn,inKey:isIn,freq:soundFreq(nn)});}
+      // 该标签在新调式中不存在(如切到五声后的 4/7):保留原音名,重算发声,标为调外
+      return Object.assign({},n,{inKey:false,freq:soundFreq(n.note)});
     });
-    // 和弦:级数不变,根音换成新调对应级数(加花的变体音质保留)
-    const oldQual=isMinorKey(oldK)?MIN_QUAL:MAJ_QUAL;
-    const newDia=diatonicChords(nk);
+    // 和弦:级数不变,根音/性质换成新调式对应级数(加花变体保留)
     chords=chords.map(c=>{
-      const nd=newDia[c.degree]||newDia[0];
-      let q=c.quality;if(q===oldQual[c.degree])q=nd.quality;
+      const nd=CURCHORDS[c.degree]||CURCHORDS[0];if(!nd)return c;
+      let q=c.quality;if(oldQual[c.degree]&&q===oldQual[c.degree])q=nd.quality;
       return Object.assign({},c,{rootLetter:nd.rootLetter,rootPC:nd.rootPC,func:nd.func,roman:nd.roman,quality:q});
     });
-    key=nk;keySel.value=nk;octave=0;renderNotes();renderMelody();renderChordTrack();
+    octave=0;renderNotes();renderMelody();renderChordTrack();
+    updateKeyBtn();
   }
+  function updateKeyBtn(){const b=$('keyBtn');if(b)b.textContent=keyDisplay()+(capo>0?(' +'+capo):capo<0?(' '+capo):'');}
+
+  // ═══ 调性弹窗:主音 + 调式 + 变调夹 + AI判调 ═══
+  const keyOverlay=$('keyOverlay'),keyCard=$('keyCard');
+  function openKeyPicker(){
+    const hasContent=melody.some(n=>!n.rest&&!n.tie)||chords.length>0;
+    let html='<h3>选择调性</h3>';
+    html+='<div class="kp-label">主音</div><div class="kp-grid tonics">';
+    NAMES.forEach((nm,pc)=>{html+='<button class="kp-btn'+(pc===tonicPC?' on':'')+'" data-t="'+pc+'">'+nm+'</button>';});
+    html+='</div>';
+    html+='<div class="kp-label">调式</div><div class="kp-grid modes">';
+    Object.keys(MODES).forEach(mid=>{html+='<button class="kp-btn wide'+(mid===modeId?' on':'')+'" data-m="'+mid+'">'+MODES[mid].name+'</button>';});
+    html+='</div>';
+    html+='<div class="kp-label">升降调(整体升高/降低,记谱与级数不变)</div><div class="kp-capo"><button class="kp-cbtn" id="capoDown">−</button><span id="capoVal">'+(capo>0?'+'+capo:capo)+' 半音</span><button class="kp-cbtn" id="capoUp">+</button></div>';
+    html+='<button class="kp-ai'+(hasContent?'':' disabled')+'" id="kpAI"'+(hasContent?'':' disabled')+'>✨ AI 判调'+(hasContent?'':'(先录点音符或和弦)')+'</button>';
+    html+='<button class="ai-close" id="kpClose">完成</button>';
+    keyCard.innerHTML=html;keyOverlay.classList.add('show');
+    setTimeout(()=>{
+      keyCard.querySelectorAll('[data-t]').forEach(b=>b.addEventListener('click',()=>{applyKey(parseInt(b.dataset.t),modeId,capo);openKeyPicker();}));
+      keyCard.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{applyKey(tonicPC,b.dataset.m,capo);openKeyPicker();}));
+      const cu=$('capoUp'),cd=$('capoDown');
+      if(cu)cu.addEventListener('click',()=>{if(capo<12){applyKey(tonicPC,modeId,capo+1);$('capoVal').textContent=(capo>0?'+'+capo:capo)+' 半音';}});
+      if(cd)cd.addEventListener('click',()=>{if(capo>-12){applyKey(tonicPC,modeId,capo-1);$('capoVal').textContent=(capo>0?'+'+capo:capo)+' 半音';}});
+      const ai=$('kpAI');if(ai&&hasContent)ai.addEventListener('click',()=>{keyOverlay.classList.remove('show');showAIResult();});
+      const cl=$('kpClose');if(cl)cl.addEventListener('click',()=>keyOverlay.classList.remove('show'));
+    },40);
+  }
+  keyOverlay.addEventListener('click',e=>{if(e.target===keyOverlay)keyOverlay.classList.remove('show');});
+  $('keyBtn').addEventListener('click',openKeyPicker);
 
   // ═══ 事件绑定 ═══
-  keySel.addEventListener('change',()=>{remapKey(keySel.value);flash('已切换至 '+SCALES[key].name);});
   btnPlay.addEventListener('click',playMelody);
   btnStop.addEventListener('click',stopPlayback);
   // 速度:步进 ±10 + 可点击输入 + 桌面滑条(共用 speedSlider 值)
@@ -1819,7 +1881,6 @@
   $('tsSelect').addEventListener('change',e=>{timeSig=e.target.value;renderMelody();renderChordTrack();flash('拍号 '+timeSig);});
   // 试音开关(单一开关,替代 tab)
   $('tryCheck').addEventListener('change',e=>setTryMode(e.target.checked));
-  btnAI.addEventListener('click',showAIResult);
   restBtn.addEventListener('pointerdown',e=>{e.preventDefault();hit(restBtn);addRest();});
   tieBtn.addEventListener('pointerdown',e=>{e.preventDefault();hit(tieBtn);addTie();});
   aiOverlay.addEventListener('click',e=>{if(e.target===aiOverlay)aiOverlay.classList.remove('show');});
@@ -1852,20 +1913,22 @@
   function persistSaves(a){try{localStorage.setItem(LSK,JSON.stringify(a));}catch(e){flash('存储空间不足');}}
   function serCh(c){return {a:c.at,r:c.rootLetter,q:c.quality,dg:c.degree,f:c.func,rm:c.roman,s:c.section||'verse'};}
   function deCh(c){return {at:c.a||0,rootLetter:c.r,rootPC:PC[c.r],quality:c.q,degree:c.dg,func:c.f,roman:c.rm,section:c.s};}
-  function serialize(){return{key:key,ts:timeSig,
+  function serialize(){return{tpc:tonicPC,mode:modeId,capo:capo,ts:timeSig,
     notes:melody.map(n=>({t:n.note,l:n.label,i:n.inKey?1:0,d:n.durMul,r:n.rest?1:0,y:n.tie?1:0})),
     chordlist:chords.map(serCh)};}
   function deserialize(o){
     if(!o||!o.notes)return false;
-    key=o.key&&SCALES[o.key]?o.key:'C';keySel.value=key;octave=0;
+    tonicPC=(o.tpc!=null)?o.tpc:(o.key==='G'?7:o.key==='D'?2:o.key==='F'?5:o.key==='Am'?9:o.key==='Em'?4:o.key==='Dm'?2:0);
+    modeId=(o.mode&&MODES[o.mode])?o.mode:(/m$/.test(o.key||'')?'minor':'major');capo=o.capo|0;
+    rebuildKey();octave=0;
     timeSig=o.ts&&TS_LEN[o.ts]?o.ts:'4/4';
     {const ts=$('tsSelect');if(ts)ts.value=timeSig;}
     chords=Array.isArray(o.chordlist)?o.chordlist.map(deCh):[];
     selChordAt=null;chordCursor=chords.length?(chords[chords.length-1].at+measureLen()):0;playStart=0;
-    melody=o.notes.map(x=>({note:x.t||null,label:x.l,inKey:!!x.i,durMul:x.d||4,rest:!!x.r,tie:!!x.y,freq:x.t?freq(x.t):0}));
-    caret=melody.length; // 载入后光标落在末尾,接着往后写
-    renderNotes();renderMelody();renderChordPal();renderChordTrack();
-    if(!playing)scrollToCaret(); // 视图定位到末尾光标
+    melody=o.notes.map(x=>({note:x.t||null,label:x.l,inKey:!!x.i,durMul:x.d||4,rest:!!x.r,tie:!!x.y,freq:x.t?soundFreq(x.t):0}));
+    caret=melody.length;
+    renderNotes();renderMelody();renderChordPal();renderChordTrack();updateKeyBtn();
+    if(!playing)scrollToCaret();
     return true;
   }
   function dstr(){const d=new Date();const p=n=>(n<10?'0':'')+n;return (d.getMonth()+1)+'/'+d.getDate()+' '+p(d.getHours())+':'+p(d.getMinutes());}
@@ -1882,7 +1945,8 @@
     html+='<div class="store-list">';
     if(!saves.length){html+='<div class="store-empty">还没有保存的旋律,先创作再保存吧</div>';}
     else{saves.forEach(s=>{const cnt=(s.notes||[]).filter(n=>!n.r).length;
-      html+='<div class="store-item" data-id="'+s.id+'"><div class="si-main"><span class="si-name">'+esc(s.name)+'</span><span class="si-meta">'+(SCALES[s.key]?SCALES[s.key].name:s.key)+' · '+cnt+'音 · '+s.date+'</span></div><button class="si-load" data-id="'+s.id+'">载入</button><button class="si-del" data-id="'+s.id+'">删除</button></div>';});}
+      const km=(s.tpc!=null)?(NAMES[s.tpc]+(MODES[s.mode]?MODES[s.mode].name:'')):(s.key||'');
+      html+='<div class="store-item" data-id="'+s.id+'"><div class="si-main"><span class="si-name">'+esc(s.name)+'</span><span class="si-meta">'+km+' · '+cnt+'音 · '+s.date+'</span></div><button class="si-load" data-id="'+s.id+'">载入</button><button class="si-del" data-id="'+s.id+'">删除</button></div>';});}
     html+='</div>';
     html+='<button class="store-share" id="doShare">🔗 生成分享链接(复制)</button>';
     html+='<button class="ai-close" id="storeClose">关闭</button>';
@@ -1920,7 +1984,8 @@
   window.addEventListener('orientationchange',computeMode);
   computeMode();
 
-  // 分享链接进入:从 URL 还原旋律
+  rebuildKey();updateKeyBtn(); // 初始化音乐引擎(默认 C 大调)
+  // 分享链接进入:从 URL 还原旋律(deserialize 内部会按存档重建调性)
   let loadedFromLink=false;
   if(location.hash.indexOf('#m=')===0){
     try{const o=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));if(deserialize(o)){loadedFromLink=true;}}catch(e){}
