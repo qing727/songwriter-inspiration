@@ -1254,7 +1254,7 @@
       if(inChord.length)pool=inChord;
     }
     // 上一个音,避免重复;取 2 个不同的
-    const prev=melody[caret-1];const prevPc=prev&&!prev.rest?NS[prev.note.replace(/\d/,'')]:-1;
+    const prev=melody[caret-1];const prevPc=(prev&&!prev.rest&&!prev.tie&&prev.note)?NS[prev.note.replace(/\d/,'')]:-1;
     const cand=pool.filter(([n])=>NS[n.replace(/\d/,'')]!==prevPc);
     const src=cand.length>=2?cand:pool;
     const picks=[];const used={};
@@ -1343,9 +1343,10 @@
       melodyBox.appendChild(g);gb+=1;
     }
     const sl=melodyBox.scrollLeft; // 重建后保留滚动位置,不自动跳
-    drawMelodyLine();
-    renderPlayhead();
-    renderRecentBubbles();
+    // 装饰性渲染各自兜底,任一出错都不阻断和弦轨渲染与播放
+    try{drawMelodyLine();}catch(e){}
+    try{renderPlayhead();}catch(e){}
+    try{renderRecentBubbles();}catch(e){}
     if(typeof renderChordTrack==='function')renderChordTrack();
     if(!playing)melodyBox.scrollLeft=sl;
   }
@@ -1441,7 +1442,7 @@
   function drawMelodyLine(){
     const chips=[...melodyBox.querySelectorAll('.note-chip')];
     const pts=[];
-    melody.forEach((n,i)=>{if(n&&!n.rest&&chips[i]){pts.push({x:chips[i].offsetLeft+chips[i].offsetWidth/2,f:Math.log2(n.freq)});}});
+    melody.forEach((n,i)=>{if(n&&!n.rest&&!n.tie&&n.freq>0&&chips[i]){pts.push({x:chips[i].offsetLeft+chips[i].offsetWidth/2,f:Math.log2(n.freq)});}});
     if(pts.length<2)return; // 少于2个音不画线
     const w=melodyBox.scrollWidth,h=melodyBox.clientHeight,padY=18;
     let mn=Math.min(...pts.map(p=>p.f)),mx=Math.max(...pts.map(p=>p.f));
