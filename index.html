@@ -927,9 +927,9 @@
 
   /* ══ 成曲页(全屏,阶段跃迁)══ */
   .stage-pane{position:relative;background:transparent;display:flex;flex-direction:column;overflow:hidden;}
-  .stage-head{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:16px 16px 10px;}
-  .stage-ttl{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25;}
-  .stage-ttl b{font-size:17px;font-weight:800;color:var(--fg);}
+  .stage-head{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:20px 18px 12px;}
+  .stage-ttl{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;line-height:1.2;}
+  .stage-ttl b{font-size:25px;font-weight:800;color:var(--fg);letter-spacing:-0.3px;}
   .stage-ttl small{font-size:13px;color:var(--fg-dim);font-weight:600;}
   /* 底部两按钮:返回修改 / 导出 */
   .stage-foot{flex-shrink:0;display:flex;gap:10px;padding:10px 16px calc(14px + env(safe-area-inset-bottom,0));}
@@ -947,7 +947,15 @@
   .s-tog:active{transform:scale(0.95);}
   .stage-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 16px 20px;-webkit-overflow-scrolling:touch;}
   /* 折行简谱(移植赏析原型,#stageScore 作用域隔离) */
-  #stageScore{display:flex;flex-direction:column;gap:8px;}
+  #stageScore{display:flex;flex-direction:column;gap:14px;}
+  /* 段落卡:一个部分一张卡 */
+  #stageScore .stage-seccard{background:transparent;border-radius:18px;padding:6px 14px 8px;}
+  #stageScore .sec-cap{display:inline-block;font-size:11px;font-weight:800;padding:3px 11px;border-radius:20px;margin-bottom:6px;}
+  #stageScore .sec-cap.verse{background:#DFEDF6;color:#547f9e;}
+  #stageScore .sec-cap.prechorus{background:#E4F0DE;color:#6b9760;}
+  #stageScore .sec-cap.chorus{background:#F8E0E7;color:#c2708a;}
+  #stageScore .sec-cap.bridge{background:#EDE6F6;color:#8a72b0;}
+  #stageScore .sec-cap.intro,#stageScore .sec-cap.interlude,#stageScore .sec-cap.outro{background:#EEF1F5;color:#7d8896;}
   #stageScore .prow{position:relative;width:100%;}
   #stageScore .clabel{position:absolute;z-index:4;font-weight:700;font-size:12.5px;line-height:1;pointer-events:none;letter-spacing:.2px;}
   #stageScore .clabel.T{color:#5E97BC;}#stageScore .clabel.SD{color:#D98098;}#stageScore .clabel.D{color:#C79B3C;}
@@ -1005,8 +1013,8 @@
   .ly-inline{position:absolute;z-index:12;transform:translateX(-50%);width:44px;height:22px;padding:0 2px;text-align:center;
     border:none;border-bottom:2px solid var(--primary-deep);border-radius:4px 4px 0 0;background:rgba(166,210,236,.18);
     font-family:var(--font);font-size:13px;font-weight:600;color:var(--fg);outline:none;caret-color:var(--primary-deep);}
-  /* 歌词模式的悬浮"完成"按钮 */
-  .ly-done-fab{position:absolute;right:16px;bottom:16px;z-index:14;display:none;border:none;cursor:pointer;
+  /* 歌词模式的悬浮"完成"按钮:抬到底部按钮条上方,不遮挡返回/导出 */
+  .ly-done-fab{position:absolute;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0));z-index:14;display:none;border:none;cursor:pointer;
     font-family:var(--font);font-size:13px;font-weight:800;padding:11px 18px;border-radius:22px;color:#fff;
     background:linear-gradient(140deg,var(--primary),var(--primary-deep));box-shadow:0 6px 18px rgba(125,180,214,.5);}
   body.stg-lyric .ly-done-fab{display:block;}
@@ -3483,21 +3491,26 @@
   function renderStage(){
     if(!SD)return;
     stageScore.innerHTML='';
-    const W=stageScore.clientWidth||330,mL=SD.mL;
+    const W=Math.max(200,(stageScore.clientWidth||330)-28),mL=SD.mL; // 减去段落卡左右内边距
     let mpr=Math.max(2,Math.min(4,Math.floor(W/(30*mL))));
     const rows=Math.ceil(SD.measures/mpr),beatPx=W/(mpr*mL);
     const CH_TOP=16,CBAND_T=24,CBAND_H=40,JP_Y=72,LY_Y=104,ROWH=124;
     const yOf=v=>CBAND_T+(SD.maxV-v)/SD.span*CBAND_H;
     const cxOf=(it,rs)=>((it.start-rs)+(it.beats>=1?0.5:it.beats/2))*beatPx;
-    let prevSec=null;
+    let prevSec=null,curCard=null;
     for(let r=0;r<rows;r++){
       const m0=r*mpr,m1=Math.min(m0+mpr,SD.measures),rowStart=m0*mL;
+      // 段落切换 → 开一张新卡,卡顶标段落名(一个部分一张卡)
+      const rowSec=SD.secByMeasure[m0]||'verse';
+      if(rowSec!==prevSec){
+        curCard=document.createElement('div');curCard.className='stage-seccard sec-'+rowSec;
+        const cap=document.createElement('div');cap.className='sec-cap '+rowSec;cap.textContent=SEC_CN[rowSec]||'';
+        curCard.appendChild(cap);stageScore.appendChild(curCard);prevSec=rowSec;
+      }
       const row=document.createElement('div');row.className='prow';row.style.height=ROWH+'px';
       for(let mi=m0;mi<m1;mi++){
         const c=SD.chordSeq[mi],x=(mi*mL-rowStart)*beatPx;
         if(mi>m0){const bl=document.createElement('div');bl.className='barline';bl.style.left=x+'px';bl.style.top=CH_TOP+'px';bl.style.height=(LY_Y-CH_TOP+2)+'px';row.appendChild(bl);}
-        const sec=SD.secByMeasure[mi]||'verse';
-        if(sec!==prevSec){const sl=document.createElement('div');sl.className='seclabel '+sec;sl.textContent=SEC_CN[sec]||'';sl.style.left=(x+1)+'px';sl.style.top='0px';row.appendChild(sl);prevSec=sec;}
         if(c){const cl=document.createElement('div');cl.className='clabel '+c.func;cl.innerHTML=chordName(c)+'<span class="cr">'+(c.roman||'')+'</span>';cl.style.left=(x+2)+'px';cl.style.top='2px';row.appendChild(cl);}
       }
       const svg=document.createElementNS(SVGNS,'svg');svg.setAttribute('class','contour');svg.setAttribute('width',W);svg.setAttribute('height',ROWH);
@@ -3530,7 +3543,7 @@
         if(a){const mk=document.createElement('div');mk.className='anno '+(a.type==='user'?'user':'ai');mk.style.left=cx+'px';mk.style.top=(cy-13)+'px';mk.textContent=a.type==='user'?'✎':'✦';
           mk.addEventListener('click',e=>{e.stopPropagation();showAnnoPop(mk,it,a);});row.appendChild(mk);}
       });
-      stageScore.appendChild(row);
+      (curCard||stageScore).appendChild(row);
     }
     if(lyricMode)placeLyInline(); // 歌词模式:重画后把就地输入框放回当前音
   }
@@ -3622,9 +3635,11 @@
     SD=buildStageData();
     $('stageName').textContent='我的作品';
     $('stageMeta').textContent=keyDisplay()+' · '+timeSig+' · '+SD.measures+' 小节';
-    document.body.classList.add('stage-on');stagePane.setAttribute('aria-hidden','false');
     if(playing)stopPlayback();
-    setTimeout(renderStage,420); // 待左划动画结束再按最终宽度渲染
+    stageScore.innerHTML='';        // 先清掉上次残留
+    document.body.classList.add('stage-on');stagePane.setAttribute('aria-hidden','false');
+    renderStage();                  // 立即渲染(stage-pane 有布局宽度,不必等动画)
+    setTimeout(renderStage,430);    // 动画结束后再校准一次宽度
   }
   // —— 歌词就地输入:在音符下方的歌词位直接打字。中文=一字一跳(靠输入法确认),英文=同音里连打、空格才跳 ——
   let lyricMode=false,lyCursor=0,lyComposing=false;
