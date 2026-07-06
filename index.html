@@ -926,16 +926,17 @@
 
   /* ══ 成曲页(全屏,阶段跃迁)══ */
   .stage-pane{position:relative;background:transparent;display:flex;flex-direction:column;overflow:hidden;}
-  .stage-head{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:14px 16px 10px;}
-  .stage-back{width:36px;height:36px;flex-shrink:0;border:none;border-radius:12px;cursor:pointer;font-size:18px;color:var(--ink-blue);
-    background:var(--surface);box-shadow:var(--soft-sh-sm);}
-  .stage-back:active{transform:scale(0.92);}
-  .stage-ttl{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2;}
-  .stage-ttl b{font-size:16px;font-weight:800;color:var(--fg);}
+  .stage-head{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:16px 16px 10px;}
+  .stage-ttl{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25;}
+  .stage-ttl b{font-size:17px;font-weight:800;color:var(--fg);}
   .stage-ttl small{font-size:13px;color:var(--fg-dim);font-weight:600;}
-  .stage-export{flex-shrink:0;border:none;border-radius:12px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;
-    padding:8px 15px;color:#fff;background:linear-gradient(140deg,var(--accent),var(--accent-deep));box-shadow:var(--soft-sh-sm);}
-  .stage-export:active{transform:scale(0.94);}
+  /* 底部两按钮:返回修改 / 导出 */
+  .stage-foot{flex-shrink:0;display:flex;gap:10px;padding:10px 16px calc(14px + env(safe-area-inset-bottom,0));}
+  .stage-fbtn{flex:1;border:none;cursor:pointer;font-family:var(--font);font-weight:800;font-size:14px;height:48px;border-radius:15px;
+    box-shadow:var(--soft-sh-sm);transition:transform .12s;}
+  .stage-fbtn.back{background:var(--surface);color:var(--ink-blue);}
+  .stage-fbtn.export{flex:1.4;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-deep));box-shadow:0 5px 16px rgba(125,180,214,.45);}
+  .stage-fbtn:active{transform:scale(0.97);}
   .stage-tools{flex-shrink:0;display:flex;gap:7px;flex-wrap:wrap;padding:2px 16px 10px;}
   .s-tog{border:none;cursor:pointer;font-family:var(--font);font-weight:700;border-radius:18px;padding:6px 12px;font-size:11.5px;
     background:var(--glass);color:var(--fg-dim);box-shadow:var(--soft-sh-sm);transition:.14s;}
@@ -943,7 +944,7 @@
   .s-tog.ai{color:#A9822E;}
   .s-tog.ai.busy{opacity:.6;}
   .s-tog:active{transform:scale(0.95);}
-  .stage-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 16px 60px;-webkit-overflow-scrolling:touch;}
+  .stage-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 16px 20px;-webkit-overflow-scrolling:touch;}
   /* 折行简谱(移植赏析原型,#stageScore 作用域隔离) */
   #stageScore{display:flex;flex-direction:column;gap:8px;}
   #stageScore .prow{position:relative;width:100%;}
@@ -1169,18 +1170,19 @@
 <!-- 成曲页(轨道内第二屏,整体左划进入:赏析 / 歌词 / 注释 / 导出) -->
 <div class="stage-pane" id="stagePane" aria-hidden="true">
   <div class="stage-head">
-    <button class="stage-back" id="stageBack" aria-label="返回编辑">←</button>
     <div class="stage-ttl"><b id="stageName">我的作品</b><small id="stageMeta"></small></div>
-    <button class="stage-export" id="stageExport">导出</button>
   </div>
   <div class="stage-tools">
     <button class="s-tog on" id="stgPlay">▶ 播放</button>
     <button class="s-tog" id="stgLyric">✍️ 填歌词</button>
     <button class="s-tog" id="stgNote">＋注释</button>
-    <button class="s-tog ai" id="stgAI">✨ 生成AI赏析</button>
   </div>
   <div class="stage-scroll">
     <div id="stageScore"></div>
+  </div>
+  <div class="stage-foot">
+    <button class="stage-fbtn back" id="stageBack">← 返回修改</button>
+    <button class="stage-fbtn export" id="stageExport">导出</button>
   </div>
   <button class="ly-done-fab" id="lyDone">✓ 歌词填好了</button>
 </div>
@@ -3690,7 +3692,6 @@
   $('stageBack').addEventListener('click',closeStage);
   { const cta=$('stageCTA'); if(cta)cta.addEventListener('click',openStage); }
   $('stgPlay').addEventListener('click',stagePlayToggle);
-  $('stgAI').addEventListener('click',stageGenAI);
   $('stageExport').addEventListener('click',()=>flash('导出功能待接入(MIDI / 长图 / 乐谱等,你定了我接)'));
   $('stgLyric').addEventListener('click',function(){
     if(lyricMode){endLyricInput();}else{document.body.classList.remove('stg-note');$('stgNote').classList.remove('on');startLyricInput();}
