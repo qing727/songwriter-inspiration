@@ -78,12 +78,16 @@
   .grain{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0.25;
     background:radial-gradient(circle at 50% 0%,rgba(143,194,220,0.08),transparent 55%);}
 
+  /* 视口 + 横向轨道:编辑器 / 成曲页两屏并排,整体左划切换(阶段推进感) */
+  .viewport{position:relative;z-index:2;width:100%;max-width:600px;height:100dvh;overflow:hidden;}
+  body.is-desktop .viewport{max-width:960px;}
+  .track{display:flex;width:200%;height:100%;transform:translateX(0);transition:transform .4s cubic-bezier(.4,0,.2,1);}
+  body.stage-on .track{transform:translateX(-50%);}
+  .track>.app,.track>.stage-pane{width:50%;flex:0 0 50%;height:100%;}
   .app{
     position:relative;z-index:2;
-    width:100%;max-width:600px;height:100dvh;
     display:flex;flex-direction:column;overflow:hidden;
   }
-  body.is-desktop .app{max-width:960px;}
 
   /* ══ HEADER ══ */
   .header{
@@ -910,12 +914,108 @@
   .hum-rec:active{transform:scale(0.98);}
   .hum-count{font-size:12px;color:var(--fg-muted);text-align:center;margin-top:8px;min-height:16px;}
   .hum-count b{color:var(--primary-deep);font-size:15px;}
+
+  /* ══ 底部通栏「完成谱曲 →」推进条(阶段出口,非小功能感)══ */
+  .stage-cta{flex-shrink:0;margin:6px 16px 14px;border:none;cursor:pointer;font-family:var(--font);font-weight:800;font-size:15px;letter-spacing:1px;
+    height:50px;border-radius:16px;color:#fff;display:flex;align-items:center;justify-content:center;gap:10px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-deep));box-shadow:0 6px 20px rgba(125,180,214,0.5);transition:transform .14s,box-shadow .2s;}
+  .stage-cta .cta-arrow{font-size:18px;transition:transform .2s;}
+  .stage-cta:hover .cta-arrow{transform:translateX(4px);}
+  .stage-cta:active{transform:scale(0.985);box-shadow:0 3px 12px rgba(125,180,214,0.4);}
+  body.is-mobile .stage-cta{margin:4px 12px 10px;height:46px;font-size:14px;}
+
+  /* ══ 成曲页(全屏,阶段跃迁)══ */
+  .stage-pane{position:relative;background:var(--bg);display:flex;flex-direction:column;overflow:hidden;}
+  .stage-head{flex-shrink:0;display:flex;align-items:center;gap:12px;padding:14px 16px 10px;}
+  .stage-back{width:36px;height:36px;flex-shrink:0;border:none;border-radius:12px;cursor:pointer;font-size:18px;color:var(--ink-blue);
+    background:var(--surface);box-shadow:var(--soft-sh-sm);}
+  .stage-back:active{transform:scale(0.92);}
+  .stage-ttl{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.2;}
+  .stage-ttl b{font-size:16px;font-weight:800;color:var(--fg);}
+  .stage-ttl small{font-size:13px;color:var(--fg-dim);font-weight:600;}
+  .stage-export{flex-shrink:0;border:none;border-radius:12px;cursor:pointer;font-family:var(--font);font-size:13px;font-weight:700;
+    padding:8px 15px;color:#fff;background:linear-gradient(140deg,var(--accent),var(--accent-deep));box-shadow:var(--soft-sh-sm);}
+  .stage-export:active{transform:scale(0.94);}
+  .stage-tools{flex-shrink:0;display:flex;gap:7px;flex-wrap:wrap;padding:2px 16px 10px;}
+  .s-tog{border:none;cursor:pointer;font-family:var(--font);font-weight:700;border-radius:18px;padding:6px 12px;font-size:11.5px;
+    background:var(--glass);color:var(--fg-dim);box-shadow:var(--soft-sh-sm);transition:.14s;}
+  .s-tog.on{background:linear-gradient(140deg,var(--primary),var(--primary-deep));color:#fff;}
+  .s-tog.ai{color:#A9822E;}
+  .s-tog.ai.busy{opacity:.6;}
+  .s-tog:active{transform:scale(0.95);}
+  .stage-scroll{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 16px 60px;-webkit-overflow-scrolling:touch;}
+  /* 折行简谱(移植赏析原型,#stageScore 作用域隔离) */
+  #stageScore{display:flex;flex-direction:column;gap:8px;}
+  #stageScore .prow{position:relative;width:100%;}
+  #stageScore .clabel{position:absolute;z-index:4;font-weight:700;font-size:12.5px;line-height:1;pointer-events:none;letter-spacing:.2px;}
+  #stageScore .clabel.T{color:#5E97BC;}#stageScore .clabel.SD{color:#D98098;}#stageScore .clabel.D{color:#C79B3C;}
+  #stageScore .clabel .cr{font-size:9px;font-weight:600;opacity:.6;margin-left:2px;}
+  #stageScore .seclabel{position:absolute;z-index:5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;pointer-events:none;}
+  #stageScore .seclabel.verse{background:#DFEDF6;color:#547f9e;}
+  #stageScore .seclabel.prechorus{background:#E4F0DE;color:#6b9760;}
+  #stageScore .seclabel.chorus{background:#F8E0E7;color:#c2708a;}
+  #stageScore .seclabel.intro,#stageScore .seclabel.interlude,#stageScore .seclabel.outro{background:#EEF1F5;color:#7d8896;}
+  #stageScore .seclabel.bridge{background:#EDE6F6;color:#8a72b0;}
+  #stageScore .barline{position:absolute;z-index:1;width:1px;background:rgba(120,150,185,.14);}
+  #stageScore .contour{position:absolute;left:0;top:0;z-index:2;pointer-events:none;overflow:visible;}
+  #stageScore .jp{position:absolute;z-index:3;text-align:center;transform:translateX(-50%);}
+  #stageScore .jp .num{font-size:16px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums;position:relative;display:inline-block;}
+  #stageScore .jp.T .num{color:#5E97BC;}#stageScore .jp.SD .num{color:#D98098;}#stageScore .jp.D .num{color:#C79B3C;}
+  #stageScore .jp.pass .num{color:#A6AEBC;}
+  #stageScore .jp .ul{height:0;border-top:1.5px solid currentColor;margin:2px auto 0;opacity:.8;width:12px;}
+  #stageScore .jp .ul2{margin-top:1.5px;}
+  #stageScore .jp .oct{position:absolute;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:currentColor;}
+  #stageScore .jp .dash{font-size:14px;font-weight:500;color:var(--fg-muted);}
+  #stageScore .jp .rest{color:#C2CAD6;font-weight:600;}
+  #stageScore .jp .dot-aug{position:absolute;right:-5px;top:0;width:3px;height:3px;border-radius:50%;background:currentColor;}
+  #stageScore .dotpt{position:absolute;z-index:3;border-radius:50%;pointer-events:none;transition:transform .12s,box-shadow .12s;}
+  #stageScore .dotpt.tone{width:8px;height:8px;box-shadow:0 1px 4px rgba(120,150,190,.3);}
+  #stageScore .dotpt.pass{width:5px;height:5px;background:#BCC4D2;}
+  #stageScore .dotpt.play{transform:scale(1.7);box-shadow:0 2px 8px rgba(120,150,190,.5);}
+  #stageScore .hit{position:absolute;z-index:7;cursor:pointer;pointer-events:none;} /* 点击热区,仅编辑态启用 */
+  body.stg-note #stageScore .hit,body.stg-lyric #stageScore .hit{pointer-events:auto;}
+  #stageScore .lyric{position:absolute;z-index:3;transform:translateX(-50%);font-size:12.5px;color:#6a7a8d;font-weight:500;white-space:nowrap;}
+  #stageScore .lyric.cur{color:var(--primary-deep);font-weight:800;} /* 歌词输入光标所在音 */
+  #stageScore .lyric.empty{color:#C2CAD6;} /* 光标位空字占位 */
+  #stageScore .anno{position:absolute;z-index:9;transform:translate(-50%,-50%);cursor:pointer;font-size:11px;line-height:1;
+    width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 40% 35%,#FBE7A6,#F0C868);box-shadow:0 1px 5px rgba(220,180,90,.5);}
+  #stageScore .anno.user{background:radial-gradient(circle at 40% 35%,#C8E3F2,#9BC7DE);box-shadow:0 1px 5px rgba(120,170,200,.5);}
+  /* 歌词输入模式:当前音高亮圈 */
+  #stageScore .dotpt.lycur{box-shadow:0 0 0 3px rgba(125,180,214,.55),0 2px 8px rgba(120,150,190,.5);transform:scale(1.5);}
+  .stage-legend{display:flex;flex-wrap:wrap;gap:8px 15px;margin-top:18px;font-size:11px;color:var(--fg-dim);}
+  .stage-legend .sli{display:flex;align-items:center;gap:5px;}
+  .stage-legend .sli i{width:9px;height:9px;border-radius:50%;}
+  .stage-tip{font-size:11.5px;color:var(--fg-muted);margin-top:12px;line-height:1.7;}
+  #stagePop{position:fixed;z-index:320;max-width:260px;background:rgba(255,255,255,.98);backdrop-filter:blur(10px);
+    border:1px solid rgba(200,220,240,.9);border-radius:14px;box-shadow:0 10px 30px rgba(110,140,180,.28);
+    padding:12px 13px;font-size:12.5px;color:var(--fg);line-height:1.6;display:none;}
+  #stagePop .pt{font-size:10.5px;font-weight:800;letter-spacing:.5px;margin-bottom:5px;}
+  #stagePop .pt.ai{color:#c99a2e;}#stagePop .pt.user{color:#5f8fb0;}
+  #stagePop textarea{width:100%;box-sizing:border-box;margin-top:6px;padding:7px 9px;border-radius:9px;resize:none;font-family:var(--font);
+    font-size:12.5px;color:var(--fg);background:var(--glass-2);border:1px solid var(--glass-brd-soft);outline:none;}
+  #stagePop .pp-row{display:flex;gap:6px;margin-top:7px;}
+  #stagePop .pp-row button{flex:1;border:none;border-radius:9px;padding:7px;font-family:var(--font);font-size:12px;font-weight:700;cursor:pointer;
+    background:var(--glass-2);color:var(--ink-blue);}
+  #stagePop .pp-row button.main{color:#fff;background:linear-gradient(140deg,var(--primary),var(--primary-deep));}
+  body.stg-note #stageScore .dotpt{cursor:pointer;}
+  /* 歌词就地输入框:贴在音符下方歌词位,直接打字 */
+  .ly-inline{position:absolute;z-index:12;transform:translateX(-50%);width:44px;height:22px;padding:0 2px;text-align:center;
+    border:none;border-bottom:2px solid var(--primary-deep);border-radius:4px 4px 0 0;background:rgba(166,210,236,.18);
+    font-family:var(--font);font-size:13px;font-weight:600;color:var(--fg);outline:none;caret-color:var(--primary-deep);}
+  /* 歌词模式的悬浮"完成"按钮 */
+  .ly-done-fab{position:absolute;right:16px;bottom:16px;z-index:14;display:none;border:none;cursor:pointer;
+    font-family:var(--font);font-size:13px;font-weight:800;padding:11px 18px;border-radius:22px;color:#fff;
+    background:linear-gradient(140deg,var(--primary),var(--primary-deep));box-shadow:0 6px 18px rgba(125,180,214,.5);}
+  body.stg-lyric .ly-done-fab{display:block;}
+  .ly-done-fab:active{transform:scale(.95);}
 </style>
 </head>
 <body>
 <div class="aurora" aria-hidden="true"><span class="a1"></span><span class="a2"></span><span class="a3"></span><span class="a4"></span></div>
 <div class="grain" aria-hidden="true"></div>
 
+<div class="viewport"><div class="track" id="track">
 <div class="app">
   <div class="header">
     <div class="brand">
@@ -1063,7 +1163,29 @@
     </div><!-- /tools -->
   </div>
 
+  <button class="stage-cta" id="stageCTA">完成谱曲<span class="cta-arrow">→</span></button>
+</div><!-- /app -->
+
+<!-- 成曲页(轨道内第二屏,整体左划进入:赏析 / 歌词 / 注释 / 导出) -->
+<div class="stage-pane" id="stagePane" aria-hidden="true">
+  <div class="stage-head">
+    <button class="stage-back" id="stageBack" aria-label="返回编辑">←</button>
+    <div class="stage-ttl"><b id="stageName">我的作品</b><small id="stageMeta"></small></div>
+    <button class="stage-export" id="stageExport">导出</button>
+  </div>
+  <div class="stage-tools">
+    <button class="s-tog on" id="stgPlay">▶ 播放</button>
+    <button class="s-tog" id="stgLyric">✍️ 填歌词</button>
+    <button class="s-tog" id="stgNote">＋注释</button>
+    <button class="s-tog ai" id="stgAI">✨ 生成AI赏析</button>
+  </div>
+  <div class="stage-scroll">
+    <div id="stageScore"></div>
+  </div>
+  <button class="ly-done-fab" id="lyDone">✓ 歌词填好了</button>
 </div>
+
+</div></div><!-- /track /viewport -->
 
 <div class="ai-overlay" id="aiOverlay"><div class="ai-card" id="aiCard"></div></div>
 <div class="ai-overlay" id="storeOverlay"><div class="ai-card" id="storeCard"></div></div>
@@ -1089,6 +1211,7 @@
 </div>
 <div class="ai-scrim" id="aiScrim"></div>
 <div class="ai-overlay" id="humOverlay"><div class="ai-card hum-card" id="humCard"></div></div>
+<div id="stagePop"></div>
 
 <div class="toast" id="toast"></div>
 
@@ -3309,6 +3432,273 @@
   }
   { const bh=$('btnHum'); if(bh)bh.addEventListener('click',openHumming);
     const bhd=$('btnHumD'); if(bhd)bhd.addEventListener('click',openHumming); }
+
+  // ═══════════════════════════════════════════
+  //  成曲页:整首展平 → 折行简谱+起伏线+和弦 → 歌词/注释/AI赏析/导出
+  // ═══════════════════════════════════════════
+  const stagePane=$('stagePane'),stageScore=$('stageScore'),stagePop=$('stagePop');
+  let SD=null;                 // 当前成曲数据
+  let stageLyrics={},stageAnno={};  // by pidx(注释含 AI 与 user)
+  let stageTimers=[],stageAC=false;
+
+  function noteMidi(nm){const m=nm&&nm.match(/^([A-G][#b]?)(\d)$/);return m?(parseInt(m[2])+1)*12+NS[m[1]]:null;}
+  function degCore(label){return (label||'').replace(/[̲̄]/g,'');} // 去八度组合记号
+  function chordPCs(c){if(!c)return[];if(c.spec)return specIntervals(c.spec).map(s=>(c.spec.rootPC+s)%12);return (QUAL_INT[c.quality]||QUAL_INT.maj).map(s=>(c.rootPC+s)%12);}
+  function jpDecor(beats){const map={0.25:{u:2},0.5:{u:1},0.75:{u:1,dot:1},1:{},1.5:{dot:1},2:{dash:1},3:{dash:2},4:{dash:3}};return map[beats]||{};}
+
+  function buildStageData(){
+    commitPhrase();
+    const mL=measureLen();
+    const items=[],chordEvents=[],secByMeasure={};
+    let gb=0;
+    song.forEach(p=>{
+      const pStart=gb;
+      (p.melody||[]).forEach(n=>{
+        const beats=4/(n.durMul||4);
+        if(n.tie){for(let i=items.length-1;i>=0;i--){if(items[i].pitched){items[i].beats+=beats;break;}}gb+=beats;return;}
+        if(n.rest){items.push({rest:true,start:gb,beats});gb+=beats;return;}
+        const midi=noteMidi(n.note);
+        items.push({pitched:true,label:n.label,note:n.note,start:gb,beats,val:midi,measure:Math.floor(gb/mL+1e-6)});
+        gb+=beats;
+      });
+      (p.chords||[]).forEach(c=>chordEvents.push({at:pStart+(c.at||0),c}));
+      const mS=Math.floor(pStart/mL+1e-6),mE=Math.max(mS+1,Math.ceil(gb/mL-1e-6));
+      for(let m=mS;m<mE;m++)secByMeasure[m]=p.section||'verse';
+    });
+    const totalBeats=gb,measures=Math.max(1,Math.ceil(totalBeats/mL));
+    chordEvents.sort((a,b)=>a.at-b.at);
+    const chordSeq=[];
+    for(let m=0;m<measures;m++){const ms=m*mL;let cur=null;chordEvents.forEach(e=>{if(e.at<=ms+1e-6)cur=e.c;});if(!cur&&chordEvents.length)cur=chordEvents[0].c;chordSeq[m]=cur;}
+    let pc=0;items.forEach(it=>{if(it.pitched)it.pidx=pc++;});
+    const vals=items.filter(x=>x.pitched&&x.val).map(x=>x.val);
+    const minV=vals.length?Math.min.apply(null,vals):60,maxV=vals.length?Math.max.apply(null,vals):72;
+    return {items,chordSeq,secByMeasure,measures,mL,minV,maxV,span:Math.max(1,maxV-minV),totalBeats,pcount:pc};
+  }
+
+  const SEC_CN={intro:'前奏',verse:'主歌',prechorus:'预副',chorus:'副歌',bridge:'桥',interlude:'间奏',outro:'尾奏'};
+  function renderStage(){
+    if(!SD)return;
+    stageScore.innerHTML='';
+    const W=stageScore.clientWidth||330,mL=SD.mL;
+    let mpr=Math.max(2,Math.min(4,Math.floor(W/(30*mL))));
+    const rows=Math.ceil(SD.measures/mpr),beatPx=W/(mpr*mL);
+    const CH_TOP=16,CBAND_T=24,CBAND_H=40,JP_Y=72,LY_Y=104,ROWH=124;
+    const yOf=v=>CBAND_T+(SD.maxV-v)/SD.span*CBAND_H;
+    const cxOf=(it,rs)=>((it.start-rs)+(it.beats>=1?0.5:it.beats/2))*beatPx;
+    let prevSec=null;
+    for(let r=0;r<rows;r++){
+      const m0=r*mpr,m1=Math.min(m0+mpr,SD.measures),rowStart=m0*mL;
+      const row=document.createElement('div');row.className='prow';row.style.height=ROWH+'px';
+      for(let mi=m0;mi<m1;mi++){
+        const c=SD.chordSeq[mi],x=(mi*mL-rowStart)*beatPx;
+        if(mi>m0){const bl=document.createElement('div');bl.className='barline';bl.style.left=x+'px';bl.style.top=CH_TOP+'px';bl.style.height=(LY_Y-CH_TOP+2)+'px';row.appendChild(bl);}
+        const sec=SD.secByMeasure[mi]||'verse';
+        if(sec!==prevSec){const sl=document.createElement('div');sl.className='seclabel '+sec;sl.textContent=SEC_CN[sec]||'';sl.style.left=(x+1)+'px';sl.style.top='0px';row.appendChild(sl);prevSec=sec;}
+        if(c){const cl=document.createElement('div');cl.className='clabel '+c.func;cl.innerHTML=chordName(c)+'<span class="cr">'+(c.roman||'')+'</span>';cl.style.left=(x+2)+'px';cl.style.top='2px';row.appendChild(cl);}
+      }
+      const svg=document.createElementNS(SVGNS,'svg');svg.setAttribute('class','contour');svg.setAttribute('width',W);svg.setAttribute('height',ROWH);
+      const rowItems=SD.items.filter(it=>it.pitched&&it.start>=rowStart&&it.start<m1*mL&&it.val);
+      if(rowItems.length>1){const pts=rowItems.map(it=>[cxOf(it,rowStart).toFixed(1),yOf(it.val).toFixed(1)]);
+        const poly=document.createElementNS(SVGNS,'polyline');poly.setAttribute('points',pts.map(p=>p.join(',')).join(' '));
+        poly.setAttribute('fill','none');poly.setAttribute('stroke','rgba(133,166,196,0.4)');poly.setAttribute('stroke-width','1.6');poly.setAttribute('stroke-linejoin','round');poly.setAttribute('stroke-linecap','round');svg.appendChild(poly);}
+      row.appendChild(svg);
+      SD.items.forEach(it=>{
+        if(it.start<rowStart||it.start>=m1*mL)return;
+        const cx=cxOf(it,rowStart);
+        if(it.rest){const jp=document.createElement('div');jp.className='jp';jp.style.left=cx+'px';jp.style.top=JP_Y+'px';jp.innerHTML='<span class="num rest">0</span>';row.appendChild(jp);return;}
+        const c=SD.chordSeq[it.measure],pcs=chordPCs(c),isTone=it.val!=null&&pcs.includes(((it.val%12)+12)%12),func=c?c.func:'T';
+        const cy=yOf(it.val!=null?it.val:SD.minV);
+        const pt=document.createElement('div');pt.className='dotpt '+(isTone?'tone':'pass');pt.dataset.pidx=it.pidx;pt.style.left=(cx-(isTone?4:2.5))+'px';pt.style.top=(cy-(isTone?4:2.5))+'px';if(isTone)pt.style.background='var(--primary)';
+        if(isTone){pt.style.background=({T:'#5E97BC',SD:'#D98098',D:'#C79B3C'})[func]||'#5E97BC';}
+        row.appendChild(pt);
+        const jp=document.createElement('div');jp.className='jp '+(isTone?func:'pass');jp.style.left=cx+'px';jp.style.top=JP_Y+'px';
+        const dec=jpDecor(it.beats);let inner='<span class="num">'+degCore(it.label)+(dec.dot?'<span class="dot-aug"></span>':'')+'</span>';
+        if(dec.u){for(let k=0;k<dec.u;k++)inner+='<div class="ul'+(k>0?' ul2':'')+'"></div>';}
+        let octHtml='';if(it.val>=72)octHtml='<span class="oct" style="top:-5px"></span>';else if(it.val<60)octHtml='<span class="oct" style="bottom:-6px"></span>';
+        jp.innerHTML=inner+octHtml;row.appendChild(jp);
+        if(dec.dash){for(let k=1;k<=dec.dash;k++){const d=document.createElement('div');d.className='jp '+(isTone?func:'pass');d.style.left=((it.start-rowStart+k+0.5)*beatPx)+'px';d.style.top=JP_Y+'px';d.innerHTML='<span class="num dash">—</span>';row.appendChild(d);}}
+        const ly=stageLyrics[it.pidx];if(ly){const l=document.createElement('div');l.className='lyric';l.style.left=cx+'px';l.style.top=LY_Y+'px';l.textContent=ly;row.appendChild(l);}
+        // 点击热区(编辑歌词/注释;非编辑态=试听)
+        const hit=document.createElement('div');hit.className='hit';hit.style.left=(cx-beatPx/2)+'px';hit.style.top=CBAND_T+'px';hit.style.width=beatPx+'px';hit.style.height=(LY_Y-CBAND_T+18)+'px';
+        hit.addEventListener('click',e=>{e.stopPropagation();onStageNote(it);});
+        row.appendChild(hit);
+        const a=stageAnno[it.pidx];
+        if(a){const mk=document.createElement('div');mk.className='anno '+(a.type==='user'?'user':'ai');mk.style.left=cx+'px';mk.style.top=(cy-13)+'px';mk.textContent=a.type==='user'?'✎':'✦';
+          mk.addEventListener('click',e=>{e.stopPropagation();showAnnoPop(mk,it,a);});row.appendChild(mk);}
+      });
+      stageScore.appendChild(row);
+    }
+    if(lyricMode)placeLyInline(); // 歌词模式:重画后把就地输入框放回当前音
+  }
+
+  function onStageNote(it){
+    if(lyricMode){ // 歌词输入中:点音符=把光标跳到这个音
+      const list=pitchedList(),idx=list.findIndex(x=>x.pidx===it.pidx);
+      if(idx>=0){lyCommitCurrent();lyCursor=idx;renderStage();placeLyInline();}
+      return;
+    }
+    if(document.body.classList.contains('stg-note'))return openStageEdit(it,'note');
+    if(it.note){const a=audio();if(a.state==='suspended')a.resume();playGuitar(soundFreq(it.note),320);}
+  }
+  function openStageEdit(it,kind){
+    hideStagePop();
+    const isLy=kind==='lyric',cur=isLy?(stageLyrics[it.pidx]||''):((stageAnno[it.pidx]&&stageAnno[it.pidx].type==='user')?stageAnno[it.pidx].text:'');
+    stagePop.innerHTML='<div class="pt '+(isLy?'user':'user')+'">'+(isLy?'✎ 歌词(这个音唱的字)':'✎ 我的注释')+'</div>'
+      +'<textarea id="stgEditT" rows="'+(isLy?1:3)+'" maxlength="'+(isLy?4:120)+'" placeholder="'+(isLy?'一个字/词':'写点什么…')+'">'+esc(cur)+'</textarea>'
+      +'<div class="pp-row"><button id="stgEditDel">清除</button><button class="main" id="stgEditSave">保存</button></div>';
+    placeStagePop(it);
+    setTimeout(()=>{const t=$('stgEditT');if(t){t.focus();}
+      $('stgEditSave').addEventListener('click',()=>{const v=(t.value||'').trim();
+        if(isLy){if(v)stageLyrics[it.pidx]=v;else delete stageLyrics[it.pidx];}
+        else{if(v)stageAnno[it.pidx]={type:'user',text:v};else if(stageAnno[it.pidx]&&stageAnno[it.pidx].type==='user')delete stageAnno[it.pidx];}
+        hideStagePop();renderStage();});
+      $('stgEditDel').addEventListener('click',()=>{if(isLy)delete stageLyrics[it.pidx];else if(stageAnno[it.pidx]&&stageAnno[it.pidx].type==='user')delete stageAnno[it.pidx];hideStagePop();renderStage();});
+    },20);
+  }
+  function showAnnoPop(el,it,a){
+    hideStagePop();
+    if(a.type==='user'){openStageEdit(it,'note');return;}
+    stagePop.innerHTML='<div class="pt ai">✦ AI 赏析</div><div><b>'+degCore(it.label)+'</b> · '+esc(a.text)+'</div>';
+    placeStagePop(it,el);
+  }
+  function placeStagePop(it,el){
+    const anchor=el||stageScore.querySelector('.dotpt[data-pidx="'+it.pidx+'"]');
+    stagePop.style.display='block';
+    const rc=anchor?anchor.getBoundingClientRect():{left:innerWidth/2,bottom:innerHeight/2,top:innerHeight/2,width:0};
+    let left=rc.left+rc.width/2-130;left=Math.max(8,Math.min(left,innerWidth-268));
+    stagePop.style.left=left+'px';let top=rc.bottom+8;stagePop.style.top=top+'px';
+    if(top+stagePop.offsetHeight>innerHeight-8)stagePop.style.top=(rc.top-stagePop.offsetHeight-8)+'px';
+  }
+  function hideStagePop(){stagePop.style.display='none';}
+  document.addEventListener('click',e=>{if(document.body.classList.contains('stage-on')&&!stagePop.contains(e.target)&&!(e.target.closest&&e.target.closest('.anno')))hideStagePop();});
+
+  // 通览播放
+  function stageStop(){stageTimers.forEach(clearTimeout);stageTimers=[];stageScore.querySelectorAll('.dotpt.play').forEach(e=>e.classList.remove('play'));const b=$('stgPlay');if(b){b.classList.remove('on');b.textContent='▶ 播放';}}
+  function stagePlayToggle(){
+    const b=$('stgPlay');
+    if(stageTimers.length){stageStop();return;}
+    const a=audio();if(a.state==='suspended')a.resume();
+    const bpm=parseInt(speedSlider.value)||108,beat=60/bpm,t0=a.currentTime+0.08;
+    if(b){b.classList.add('on');b.textContent='■ 停';}
+    // 和弦垫音(每小节)
+    SD.chordSeq.forEach((c,m)=>{if(c)setTimeout(()=>{if(stageTimers.length)playChord(c,SD.mL*beat*1000*0.9,true);},(m*SD.mL*beat)*1000+60);});
+    SD.items.forEach(it=>{if(it.rest||it.val==null)return;const at=it.start*beat,d=it.beats*beat;
+      const id=setTimeout(()=>{playGuitar(soundFreq(it.note),Math.min(d*1000*0.9,1600));
+        const el=stageScore.querySelector('.dotpt[data-pidx="'+it.pidx+'"]');if(el){el.classList.add('play');setTimeout(()=>el.classList.remove('play'),d*1000*0.8);}},at*1000+80);
+      stageTimers.push(id);});
+    // 结束复位
+    stageTimers.push(setTimeout(stageStop,SD.totalBeats*beat*1000+400));
+  }
+
+  // AI 赏析
+  async function stageGenAI(){
+    const btn=$('stgAI');if(btn.classList.contains('busy'))return;
+    if(!(localStorage.getItem(DS_KEY_LS)||'').trim()){flash('先在 AI 帮写里填入 DeepSeek Key');return;}
+    btn.classList.add('busy');btn.textContent='生成中…';
+    try{
+      const notes=SD.items.filter(x=>x.pitched).map(x=>({m:x.measure,deg:degCore(x.label),beats:x.beats}));
+      const chords=SD.chordSeq.map((c,m)=>({m,name:c?chordName(c):'',func:c?c.func:''}));
+      const sys='你是资深流行音乐赏析导师。下面是一首简谱作品(级数制,相对主音)。请挑出 3~5 个「最值得一说」的音/位置,用有温度的口语讲清「为什么这里写得好/妙在哪」(情绪、张力、记忆点、和声关系等),让初学者听懂。只输出 JSON:{"annos":[{"measure":小节号从0起,"deg":"该音简谱级数如1/3/#4","text":"一句话赏析"}]}。deg 要能在该小节找到对应音。';
+      const user='【调性】'+keyDisplay()+' 拍号 '+timeSig+'\n【每小节和弦】'+JSON.stringify(chords)+'\n【音符序列(m=小节,deg=级数,beats=时值拍)】'+JSON.stringify(notes);
+      const j=await callDeepSeek(sys,user);
+      let n=0;
+      (j.annos||[]).forEach(a=>{
+        const it=SD.items.find(x=>x.pitched&&x.measure===(a.measure|0)&&degCore(x.label)===String(a.deg));
+        if(it&&!(stageAnno[it.pidx]&&stageAnno[it.pidx].type==='user')){stageAnno[it.pidx]={type:'ai',text:a.text};n++;}
+      });
+      renderStage();flash(n?('已生成 '+n+' 条赏析 ✦'):'AI 没定位到具体音,可再试一次');
+    }catch(e){flash('生成失败:'+e.message);}
+    btn.classList.remove('busy');btn.textContent='✨ 生成AI赏析';
+  }
+
+  function openStage(){
+    commitPhrase();
+    const has=song.some(p=>(p.melody||[]).some(n=>!n.rest&&!n.tie));
+    if(!has){flash('先写点旋律,再来成曲');return;}
+    SD=buildStageData();
+    $('stageName').textContent='我的作品';
+    $('stageMeta').textContent=keyDisplay()+' · '+timeSig+' · '+SD.measures+' 小节';
+    document.body.classList.add('stage-on');stagePane.setAttribute('aria-hidden','false');
+    if(playing)stopPlayback();
+    setTimeout(renderStage,420); // 待左划动画结束再按最终宽度渲染
+  }
+  // —— 歌词就地输入:在音符下方的歌词位直接打字。中文=一字一跳(靠输入法确认),英文=同音里连打、空格才跳 ——
+  let lyricMode=false,lyCursor=0,lyComposing=false;
+  const lyInline=(function(){const i=document.createElement('input');i.type='text';i.className='ly-inline';i.autocomplete='off';i.setAttribute('autocapitalize','off');return i;})();
+  function pitchedList(){return SD?SD.items.filter(x=>x.pitched):[];}
+  function startLyricInput(){
+    if(!SD)return;lyricMode=true;document.body.classList.add('stg-lyric');
+    setLyCursor(0);flash('直接打字:中文一字一跳,英文同一个音里连打、按空格跳下一个音');
+  }
+  function endLyricInput(){
+    lyricMode=false;document.body.classList.remove('stg-lyric');
+    if(lyInline.parentNode)lyInline.parentNode.removeChild(lyInline);
+    stageScore.querySelectorAll('.dotpt.lycur').forEach(e=>e.classList.remove('lycur'));
+    renderStage();
+  }
+  // 把 inline 输入框放到「当前光标音」的歌词位置
+  function placeLyInline(){
+    const list=pitchedList(),it=list[lyCursor];
+    if(!it){if(lyInline.parentNode)lyInline.parentNode.removeChild(lyInline);return;}
+    const pt=stageScore.querySelector('.dotpt[data-pidx="'+it.pidx+'"]');
+    const row=pt&&pt.closest('.prow');if(!row){return;}
+    if(lyInline.parentNode!==row)row.appendChild(lyInline);
+    // 歌词行 y=104(LY_Y),x 对齐音符中心
+    const left=parseFloat(pt.style.left)+((pt.classList.contains('tone'))?4:2.5);
+    lyInline.style.left=left+'px';lyInline.style.top='100px';
+    lyInline.value=stageLyrics[it.pidx]||'';
+    row.querySelectorAll('.dotpt.lycur').forEach(e=>e.classList.remove('lycur'));pt.classList.add('lycur');
+    pt.scrollIntoView({block:'nearest',behavior:'smooth'});
+    setTimeout(()=>lyInline.focus(),0);
+  }
+  function setLyCursor(i){
+    const list=pitchedList();lyCursor=Math.max(0,Math.min(i,list.length-1));
+    stageScore.querySelectorAll('.dotpt.lycur').forEach(e=>e.classList.remove('lycur'));
+    placeLyInline();
+  }
+  function lyCommitCurrent(){ // 把 inline 里的内容写回当前音
+    const list=pitchedList(),it=list[lyCursor];if(!it)return;
+    const v=(lyInline.value||'').trim();
+    if(v)stageLyrics[it.pidx]=v;else delete stageLyrics[it.pidx];
+  }
+  function lyGo(delta){
+    lyCommitCurrent();
+    const list=pitchedList();let ni=lyCursor+delta;
+    if(ni>=list.length){ // 到末尾:收尾
+      renderStage();endLyricInput();$('stgLyric').classList.remove('on');flash('歌词填写完成');return;
+    }
+    ni=Math.max(0,ni);lyCursor=ni;renderStage();placeLyInline();
+  }
+  // inline 事件:中文靠 composition,英文靠空格分词
+  lyInline.addEventListener('compositionstart',()=>{lyComposing=true;});
+  lyInline.addEventListener('compositionend',()=>{lyComposing=false;
+    // 中文输入法确认:通常是一个字/词 → 落到当前音,自动跳下一个
+    const v=(lyInline.value||'').trim();
+    if(v){const list=pitchedList(),it=list[lyCursor];if(it)stageLyrics[it.pidx]=v;lyGo(1);}
+  });
+  lyInline.addEventListener('keydown',e=>{
+    if(lyComposing)return;
+    if(e.key===' '||e.key==='Spacebar'){e.preventDefault();lyGo(1);} // 英文:空格=跳下一个音
+    else if(e.key==='Enter'){e.preventDefault();lyGo(1);}
+    else if(e.key==='Backspace'&&!lyInline.value){e.preventDefault();
+      const list=pitchedList();if(lyCursor>0){const it=list[lyCursor-1];if(it)delete stageLyrics[it.pidx];lyCursor--;renderStage();placeLyInline();}}
+    else if(e.key==='ArrowRight'){e.preventDefault();lyGo(1);}
+    else if(e.key==='ArrowLeft'){e.preventDefault();lyGo(-1);}
+  });
+
+  function closeStage(){stageStop();hideStagePop();if(lyricMode)endLyricInput();document.body.classList.remove('stage-on');stagePane.setAttribute('aria-hidden','true');document.body.classList.remove('stg-lyric','stg-note');$('stgLyric').classList.remove('on');$('stgNote').classList.remove('on');}
+  $('stageBack').addEventListener('click',closeStage);
+  { const cta=$('stageCTA'); if(cta)cta.addEventListener('click',openStage); }
+  $('stgPlay').addEventListener('click',stagePlayToggle);
+  $('stgAI').addEventListener('click',stageGenAI);
+  $('stageExport').addEventListener('click',()=>flash('导出功能待接入(MIDI / 长图 / 乐谱等,你定了我接)'));
+  $('stgLyric').addEventListener('click',function(){
+    if(lyricMode){endLyricInput();}else{document.body.classList.remove('stg-note');$('stgNote').classList.remove('on');startLyricInput();}
+    this.classList.toggle('on',lyricMode);
+  });
+  $('stgNote').addEventListener('click',function(){if(lyricMode){endLyricInput();$('stgLyric').classList.remove('on');}document.body.classList.toggle('stg-note');this.classList.toggle('on',document.body.classList.contains('stg-note'));flash(document.body.classList.contains('stg-note')?'点音符 → 写你的注释':'');});
+  { const ld=$('lyDone'); if(ld)ld.addEventListener('click',()=>{if(lyricMode){endLyricInput();$('stgLyric').classList.remove('on');}}); }
+  let stageRt;window.addEventListener('resize',()=>{if(document.body.classList.contains('stage-on')){clearTimeout(stageRt);stageRt=setTimeout(renderStage,150);}});
 
   rebuildKey();updateKeyBtn(); // 初始化音乐引擎(默认 C 大调)
   activatePhrase(0); // 把编辑缓冲指向初始乐句
