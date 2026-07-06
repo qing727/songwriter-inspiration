@@ -879,6 +879,37 @@
   .ai-mcell:active{background:rgba(143,194,220,0.2);}
   .ai-mcell.on{background:rgba(143,194,220,0.28);border-style:solid;border-color:rgba(125,180,214,0.9);box-shadow:0 0 10px rgba(125,180,214,0.35);}
   .ai-mcell.on span{opacity:1;}
+
+  /* ══ 哼唱录入 ══ */
+  /* 哼唱入口:与「延音/休止」同款按钮,放在同一行,主色区分 */
+  #btnHum{color:var(--primary-deep);}
+  .hum-btn{color:var(--primary-deep)!important;}
+  .hum-card{max-width:400px;}
+  .hum-tip{font-size:12px;color:var(--fg-dim);line-height:1.55;text-align:center;margin:-2px 0 4px;}
+  .hum-set{display:flex;gap:8px;margin-top:6px;}
+  .hum-chip{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 6px;border-radius:12px;
+    background:var(--glass-2);box-shadow:var(--soft-sh-sm);border:none;font-family:var(--font);cursor:pointer;}
+  .hum-chip .hc-t{font-size:9.5px;color:var(--fg-muted);font-weight:600;letter-spacing:0.5px;}
+  .hum-chip .hc-v{font-size:15px;font-weight:800;color:var(--ink-blue);line-height:1;}
+  .hum-chip.on{background:linear-gradient(140deg,var(--primary),var(--primary-deep));}
+  .hum-chip.on .hc-t,.hum-chip.on .hc-v{color:#fff;}
+  .hum-chip:active{transform:scale(0.95);}
+  .hum-bpm{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:8px;}
+  .hum-bpm button{width:32px;height:32px;border-radius:10px;border:none;background:var(--glass-2);color:var(--primary-deep);font-size:18px;font-weight:700;cursor:pointer;box-shadow:var(--soft-sh-sm);}
+  .hum-bpm button:active{transform:scale(0.9);}
+  .hum-bpm .hb-v{font-size:14px;font-weight:700;color:var(--ink-blue);min-width:78px;text-align:center;}
+  /* 实时旋律线画布 */
+  .hum-canvas{width:100%;height:96px;margin-top:12px;border-radius:14px;background:var(--glass-2);box-shadow:var(--soft-sh-sm) inset;display:block;}
+  /* 录音大按钮 */
+  .hum-rec{width:100%;margin-top:12px;padding:14px;border-radius:16px;border:none;font-family:var(--font);font-size:15px;font-weight:800;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;gap:9px;color:#fff;background:linear-gradient(140deg,var(--primary),var(--primary-deep));box-shadow:var(--soft-sh);}
+  .hum-rec .dotr{width:12px;height:12px;border-radius:50%;background:#fff;}
+  .hum-rec.on{background:linear-gradient(140deg,#EE7A7A,#D65A5A);animation:humPulse 1.1s ease-in-out infinite;}
+  .hum-rec.on .dotr{border-radius:2px;}
+  @keyframes humPulse{0%,100%{box-shadow:var(--soft-sh),0 0 0 0 rgba(238,122,122,0.5)}50%{box-shadow:var(--soft-sh),0 0 0 8px rgba(238,122,122,0)}}
+  .hum-rec:active{transform:scale(0.98);}
+  .hum-count{font-size:12px;color:var(--fg-muted);text-align:center;margin-top:8px;min-height:16px;}
+  .hum-count b{color:var(--primary-deep);font-size:15px;}
 </style>
 </head>
 <body>
@@ -984,6 +1015,7 @@
       <div class="rest-row">
         <button class="note-btn tie" id="tieBtn">— 延音</button>
         <button class="note-btn rest" id="restBtn">0 休止</button>
+        <button class="note-btn rest hum-btn" id="btnHumD" title="哼一段 → 自动写成旋律">🎤 哼唱</button>
         <span class="rk">延音 空格 · 休止 0</span>
       </div>
     </div>
@@ -1003,6 +1035,7 @@
       <div class="mpad-foot">
         <button class="btn-rest-m" id="tieBtnM">— 延音</button>
         <button class="btn-rest-m" id="restBtnM">0 休止</button>
+        <button class="btn-rest-m" id="btnHum" title="哼一段 → 自动写成旋律">🎤 哼唱</button>
       </div>
     </div>
 
@@ -1055,6 +1088,7 @@
   <div class="aip-body" id="aipBody"></div>
 </div>
 <div class="ai-scrim" id="aiScrim"></div>
+<div class="ai-overlay" id="humOverlay"><div class="ai-card hum-card" id="humCard"></div></div>
 
 <div class="toast" id="toast"></div>
 
@@ -1593,7 +1627,8 @@
     if(typeof highlightChordClip==='function')highlightChordClip(-1);
     btnPlay.textContent='▶';btnPlay.classList.remove('playing');
     if(typeof renderPhraseBar==='function')renderPhraseBar();
-    if(typeof aiPanel!=='undefined'&&aiPanel&&aiPanel.classList.contains('show')&&typeof renderAIPanel==='function')renderAIPanel();}
+    if(typeof aiPanel!=='undefined'&&aiPanel&&aiPanel.classList.contains('show')&&typeof renderAIPanel==='function')renderAIPanel();
+    if(typeof humResultActive==='function'&&humResultActive())renderHumResult();}
 
   // opts:{fromStart 从头播,noLoop 忽略循环,chained 连播中(不打断已在播状态),onEnd 自然结束回调}
   function playMelody(opts){
@@ -3075,6 +3110,205 @@
   window.addEventListener('resize',computeMode);
   window.addEventListener('orientationchange',computeMode);
   computeMode();
+
+  // ═══════════════════════════════════════════
+  //  哼唱录入:哼一段 → 测音高 → 切分量化 → 吸附到当前调+和弦 → 复用结果面板
+  // ═══════════════════════════════════════════
+  const humOverlay=$('humOverlay'),humCard=$('humCard');
+  let humStream=null,humCtx=null,humAnalyser=null,humBuf=null,humRAF=null,humRecording=false,humTrack=[],humT0=0;
+  let humMetroOn=false,metroTimer=null,humBPM=120,humStage='setup';
+  function humResultActive(){return humStage==='result'&&humOverlay&&humOverlay.classList.contains('show');}
+  function openHumming(){
+    if(playing)stopPlayback();
+    humBPM=parseInt(speedSlider.value)||120;humStage='setup';humTrack=[];
+    renderHumSetup();humOverlay.classList.add('show');
+  }
+  function closeHumming(){humStopRec(true);humOverlay.classList.remove('show');humStage='setup';}
+  humOverlay.addEventListener('click',e=>{if(e.target===humOverlay)closeHumming();});
+
+  // —— 自相关测频(单音哼唱)——
+  function autoCorrelate(buf,sr){
+    let SIZE=buf.length,rms=0;
+    for(let i=0;i<SIZE;i++)rms+=buf[i]*buf[i];
+    rms=Math.sqrt(rms/SIZE);
+    if(rms<0.006)return -1; // 静音门(放低,避免把人声当静音)
+    let r1=0,r2=SIZE-1,th=0.2;
+    for(let i=0;i<SIZE/2;i++)if(Math.abs(buf[i])<th){r1=i;break;}
+    for(let i=1;i<SIZE/2;i++)if(Math.abs(buf[SIZE-i])<th){r2=SIZE-i;break;}
+    const b=buf.slice(r1,r2);const N=b.length;if(N<2)return -1;
+    const c=new Array(N).fill(0);
+    for(let i=0;i<N;i++)for(let j=0;j<N-i;j++)c[i]+=b[j]*b[j+i];
+    let d=0;while(d<N-1&&c[d]>c[d+1])d++;
+    let mx=-1,pos=-1;
+    for(let i=d;i<N;i++)if(c[i]>mx){mx=c[i];pos=i;}
+    if(pos<=0)return -1;
+    let T0=pos;const x1=c[T0-1]||0,x2=c[T0],x3=c[T0+1]||0;
+    const aa=(x1+x3-2*x2)/2,bb=(x3-x1)/2;if(aa)T0=T0-bb/(2*aa);
+    const f=sr/T0;return (f>60&&f<1200)?f:-1;
+  }
+  async function humStartRec(){
+    try{
+      // 关掉降噪/回声消除:它们会把持续哼唱当噪声抑制掉,导致测不到音高;只保留自动增益
+      const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:false,noiseSuppression:false,autoGainControl:true}});
+      humStream=stream;const a=audio();humCtx=a;
+      const src=a.createMediaStreamSource(stream),an=a.createAnalyser();an.fftSize=1024;src.connect(an);
+      humAnalyser=an;humBuf=new Float32Array(an.fftSize);
+      humTrack=[];humT0=a.currentTime;humRecording=true;
+      if(humMetroOn)startMetro();
+      renderHumSetup();humLoop();
+    }catch(e){flash('无法使用麦克风:'+(e.message||e.name||'权限被拒'));}
+  }
+  function humLoop(){
+    if(!humRecording)return;
+    humAnalyser.getFloatTimeDomainData(humBuf);
+    const f=autoCorrelate(humBuf,humCtx.sampleRate);
+    const t=humCtx.currentTime-humT0;
+    let midi=null;
+    if(f>0){const m=Math.round(69+12*Math.log2(f/440));if(m>=45&&m<=88)midi=m;}
+    humTrack.push({t,midi});drawHumLine();
+    const cnt=$('humCount');if(cnt)cnt.innerHTML='已录 <b>'+t.toFixed(1)+'</b> 秒 · 继续哼,点停止结束';
+    humRAF=requestAnimationFrame(humLoop);
+  }
+  function humStopRec(silent){
+    if(!humRecording)return;
+    humRecording=false;if(humRAF)cancelAnimationFrame(humRAF);humRAF=null;stopMetro();
+    if(humStream){humStream.getTracks().forEach(t=>t.stop());humStream=null;}
+    if(silent)return;
+    const items=humTrackToNotes(humTrack);
+    if(!items.length){flash('没捕捉到音高 · 用「啊/啦」哼、每个音拖长一点、离麦近些再试');renderHumSetup();return;}
+    aiTarget='melody';
+    aiResult={target:'melody',items,reason:'按当前「'+keyDisplay()+'」和脚下和弦,把你哼的旋律吸附成了简谱——跑调和节奏都帮你归整了。试听下,不满意可重哼或手动微调。'};
+    const b0=melody.slice(0,caret).reduce((s,n)=>s+4/(n.durMul||4),0);
+    const tot=items.reduce((s,n)=>s+4/(n.durMul||4),0);
+    aiSel={track:'melody',b0,b1:b0+tot,i0:caret,i1:caret-1,empty:true};
+    humStage='result';renderHumResult();
+  }
+  // 切音符 + 量化 + 吸附
+  function humTrackToNotes(track){
+    if(!track.length)return [];
+    // ① 中位数平滑:窗口只取 ±1 帧,压毛刺但不糊掉短音(窗口太大会吃掉快音符)
+    const N=track.length,sm=new Array(N);
+    for(let i=0;i<N;i++){
+      const w=[];for(let j=Math.max(0,i-1);j<=Math.min(N-1,i+1);j++){if(track[j].midi!=null)w.push(track[j].midi);}
+      sm[i]=w.length?w.sort((a,b)=>a-b)[w.length>>1]:null;
+    }
+    // ② 容差合并成段:相邻帧音高差 ≤1 半音视为同一个音(而非精确相等),避免被抖动切碎
+    const segs=[];let cur=null;
+    for(let i=0;i<N;i++){
+      const m=sm[i],t=track[i].t;
+      if(cur&&cur.midi!=null&&m!=null&&Math.abs(m-cur.midi)<=1){cur.t1=t;cur.sum+=m;cur.cnt++;}
+      else if(cur&&cur.midi==null&&m==null){cur.t1=t;}
+      else{if(cur)segs.push(cur);cur={midi:m,t0:t,t1:t,sum:(m==null?0:m),cnt:(m==null?0:1)};}
+    }
+    if(cur)segs.push(cur);
+    // 用段内均值定音高(更稳)
+    segs.forEach(s=>{if(s.cnt)s.midi=Math.round(s.sum/s.cnt);});
+    // 最短音符门槛:随 BPM 动态 = 半个十六分音符时长,且不超过 55ms,让快音符也能保留
+    const sixteenth=60/humBPM/4; // 一个十六分音符的秒数
+    const MIN=Math.min(0.055,sixteenth*0.5);
+    let clean=segs.filter(s=>(s.t1-s.t0)>=MIN);
+    while(clean.length&&clean[0].midi==null)clean.shift();
+    while(clean.length&&clean[clean.length-1].midi==null)clean.pop();
+    if(!clean.some(s=>s.midi!=null))return [];
+    const bpm=humBPM,items=[];
+    let atBeat=melody.slice(0,caret).reduce((s,n)=>s+4/(n.durMul||4),0);
+    clean.forEach(s=>{
+      const durSec=s.t1-s.t0,beats=durSec*bpm/60,durMul=quantizeDur(beats),qb=4/durMul;
+      if(s.midi==null){if(beats>=0.4){items.push({rest:true,label:'0',note:null,freq:0,durMul});atBeat+=qb;}return;}
+      const snap=snapMidiToKey(s.midi,atBeat);
+      items.push({note:snap.note,label:snap.label,freq:soundFreq(snap.note),inKey:true,durMul});
+      atBeat+=qb;
+    });
+    return items;
+  }
+  function quantizeDur(beats){
+    const opts=[['16',0.25],['8',0.5],['8.',0.75],['4',1],['4.',1.5]];
+    let best='4',bd=99;opts.forEach(([k,b])=>{const d=Math.abs(b-beats);if(d<bd){bd=d;best=k;}});
+    return 4/(DUR_BEATS[best]||1);
+  }
+  function snapMidiToKey(midi,atBeat){
+    const iv=MODES[modeId].iv,lab=MODES[modeId].lab;
+    const rel=((midi-(60+tonicPC))%12+12)%12;
+    let pool=iv.map((s,i)=>({s,i}));
+    const strong=Math.abs(atBeat-Math.round(atBeat))<0.12;
+    const ci=(typeof chordAtBeat==='function')?chordAtBeat(atBeat):-1;
+    if(strong&&ci>=0&&chords[ci]){
+      const ch=chords[ci],cs=(QUAL_INT[ch.quality]||QUAL_INT.maj).map(x=>((ch.rootPC+x-tonicPC)%12+12)%12);
+      const cp=pool.filter(p=>cs.includes(p.s));if(cp.length)pool=cp;
+    }
+    let best=pool[0],bd=99;
+    pool.forEach(p=>{const dd=Math.min((p.s-rel+12)%12,(rel-p.s+12)%12);if(dd<bd){bd=dd;best=p;}});
+    const label=lab[best.i],pc=(tonicPC+best.s)%12;
+    let sm=midi-(((midi%12)-pc+12)%12);
+    if(midi-sm>6)sm+=12;else if(sm-midi>6)sm-=12;
+    const oct=Math.max(-1,Math.min(1,Math.round((sm-66)/12)));
+    return {label,oct,note:degToNote(label,oct)};
+  }
+  // 节拍器 & 主音
+  function metroClick(strong){
+    const a=audio(),o=a.createOscillator(),g=a.createGain();
+    o.frequency.value=strong?1600:1050;o.connect(g);g.connect(a.destination);
+    const t=a.currentTime;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(0.3,t+0.004);g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);
+    o.start(t);o.stop(t+0.08);
+  }
+  function startMetro(){stopMetro();let beat=1;const mL=measureLen();metroClick(true);
+    metroTimer=setInterval(()=>{metroClick(beat%mL===0);beat++;},60/humBPM*1000);}
+  function stopMetro(){if(metroTimer){clearInterval(metroTimer);metroTimer=null;}}
+  function playTonic(){const a=audio();if(a.state==='suspended')a.resume();playGuitar(soundFreq(degToNote('1',0)),700);}
+  // 实时旋律线
+  function drawHumLine(){
+    const cv=$('humCanvas');if(!cv)return;const g=cv.getContext('2d'),W=cv.width,H=cv.height;
+    g.clearRect(0,0,W,H);
+    g.strokeStyle='rgba(143,194,220,0.25)';g.beginPath();g.moveTo(0,H/2);g.lineTo(W,H/2);g.stroke();
+    if(!humTrack.length)return;
+    const win=6,tNow=humTrack[humTrack.length-1].t,t0=Math.max(0,tNow-win);
+    const pts=humTrack.filter(p=>p.t>=t0&&p.midi!=null);
+    if(pts.length<2)return;
+    const mn=Math.min.apply(null,pts.map(p=>p.midi))-2,mx=Math.max.apply(null,pts.map(p=>p.midi))+2;
+    g.strokeStyle='#7DB4D6';g.lineWidth=2.5;g.lineJoin='round';g.beginPath();
+    pts.forEach((p,k)=>{const x=(p.t-t0)/win*W,y=H-((p.midi-mn)/(mx-mn||1))*(H-16)-8;if(k===0)g.moveTo(x,y);else g.lineTo(x,y);});
+    g.stroke();
+  }
+  // 面板:setup / result
+  function renderHumSetup(){
+    let h='<h3>🎤 哼一段 · 自动写成旋律</h3>';
+    h+='<div class="hum-tip">开节拍器跟着哼,哼完自动按当前调('+keyDisplay()+')和脚下和弦整理成简谱,从当前光标往后写。</div>';
+    h+='<div class="hum-set">'
+      +'<button class="hum-chip" id="humTonic"><span class="hc-t">主音·点听</span><span class="hc-v">'+NAMES[tonicPC]+' (1)</span></button>'
+      +'<button class="hum-chip'+(humMetroOn?' on':'')+'" id="humMetro"><span class="hc-t">节拍器</span><span class="hc-v">'+(humMetroOn?'开':'关')+'</span></button></div>';
+    h+='<div class="hum-bpm"><button id="humBpmD">−</button><span class="hb-v" id="humBpmV">'+humBPM+' BPM</span><button id="humBpmU">+</button></div>';
+    h+='<canvas class="hum-canvas" id="humCanvas" width="360" height="96"></canvas>';
+    h+='<button class="hum-rec'+(humRecording?' on':'')+'" id="humRec"><span class="dotr"></span>'+(humRecording?'停止 · 完成哼唱':'开始哼')+'</button>';
+    h+='<div class="hum-count" id="humCount">'+(humRecording?'':'点上方按钮开始,对着麦克风哼')+'</div>';
+    h+='<button class="ai-close" id="humClose">取消</button>';
+    humCard.innerHTML=h;
+    setTimeout(()=>{
+      const t=$('humTonic');if(t)t.addEventListener('click',playTonic);
+      const m=$('humMetro');if(m)m.addEventListener('click',()=>{humMetroOn=!humMetroOn;if(humRecording){humMetroOn?startMetro():stopMetro();}renderHumSetup();});
+      const bd=$('humBpmD');if(bd)bd.addEventListener('click',()=>{humBPM=Math.max(50,humBPM-5);const v=$('humBpmV');if(v)v.textContent=humBPM+' BPM';});
+      const bu=$('humBpmU');if(bu)bu.addEventListener('click',()=>{humBPM=Math.min(200,humBPM+5);const v=$('humBpmV');if(v)v.textContent=humBPM+' BPM';});
+      const r=$('humRec');if(r)r.addEventListener('click',()=>{humRecording?humStopRec(false):humStartRec();});
+      const c=$('humClose');if(c)c.addEventListener('click',closeHumming);
+      const cv=$('humCanvas');if(cv&&cv.clientWidth)cv.width=cv.clientWidth;
+    },20);
+  }
+  function renderHumResult(){
+    let h='<h3>🎤 哼唱结果</h3>';
+    if(aiResult&&aiResult.reason)h+='<div class="aip-reason">'+esc(aiResult.reason)+'</div>';
+    h+='<div class="aip-preview">'+previewHTML(aiResult)+'</div>';
+    h+='<div class="aip-acts"><button class="aip-try" id="humTry">'+(playing?'⏹ 停止':'▶ 试听整段')+'</button><button class="aip-redo" id="humRedo">重新哼</button></div>';
+    h+='<div class="aip-acts"><button class="aip-fill" id="humFill">✓ 填入(从光标往后)</button></div>';
+    h+='<button class="ai-close" id="humClose2">取消</button>';
+    humCard.innerHTML=h;
+    setTimeout(()=>{
+      const tr=$('humTry');if(tr)tr.addEventListener('click',()=>{previewPlayAI();renderHumResult();});
+      const rd=$('humRedo');if(rd)rd.addEventListener('click',()=>{if(playing)stopPlayback();humStage='setup';humTrack=[];renderHumSetup();});
+      const fl=$('humFill');if(fl)fl.addEventListener('click',()=>{applyAIResult();humOverlay.classList.remove('show');humStage='setup';});
+      const c=$('humClose2');if(c)c.addEventListener('click',closeHumming);
+    },20);
+  }
+  { const bh=$('btnHum'); if(bh)bh.addEventListener('click',openHumming);
+    const bhd=$('btnHumD'); if(bhd)bhd.addEventListener('click',openHumming); }
 
   rebuildKey();updateKeyBtn(); // 初始化音乐引擎(默认 C 大调)
   activatePhrase(0); // 把编辑缓冲指向初始乐句
