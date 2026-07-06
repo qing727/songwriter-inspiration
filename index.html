@@ -197,6 +197,9 @@
     animation:chipIn .4s cubic-bezier(.34,1.56,.64,1);
   }
   .note-chip .nl{flex-shrink:0;white-space:nowrap;}
+  /* AI 试听中、尚未填入的内容:半透明虚线,区别于已填入 */
+  .note-chip.ai-ghost{opacity:0.5;border:1.5px dashed rgba(125,180,214,0.7);background:rgba(143,194,220,0.12);box-shadow:none;}
+  .chord-clip.ai-ghost{opacity:0.5;outline:1.5px dashed rgba(125,180,214,0.7);outline-offset:-2px;}
   /* 时值拖尾:表达音的长短(块越宽=音越长,尾越长) */
   .note-chip .dur-tail{flex:1 1 auto;height:3px;margin-left:4px;border-radius:2px;
     background:linear-gradient(90deg,rgba(143,194,220,0.55),rgba(143,194,220,0.08));min-width:0;}
@@ -832,18 +835,31 @@
   .aip-result{margin-top:14px;border-top:1px solid var(--glass-brd-soft);padding-top:12px;}
   .aip-reason{font-size:13px;color:var(--fg);line-height:1.6;background:linear-gradient(140deg,rgba(166,210,236,0.16),rgba(243,211,220,0.13));
     border-radius:12px;padding:11px 13px;margin-bottom:11px;}
-  .aip-preview{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:10px;border-radius:12px;background:var(--glass-2);}
-  .ai-rn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:30px;height:40px;padding:0 7px;border-radius:11px;
-    background:var(--surface);box-shadow:var(--soft-sh-sm);font-size:15px;font-weight:700;color:var(--fg);}
-  .ai-rn.out{color:var(--accent-deep);background:rgba(235,207,134,0.16);}
-  .ai-rn.rest{color:var(--fg-muted);font-size:12px;}.ai-rn.tie{color:var(--primary-deep);}
-  .ai-rn small{font-size:8px;font-weight:500;color:var(--fg-muted);margin-top:1px;}
-  .ai-rc{display:inline-flex;align-items:center;padding:8px 11px;border-radius:11px;font-size:15px;font-weight:700;box-shadow:var(--soft-sh-sm);}
-  .ai-rc.func-T{background:rgba(143,194,220,0.2);color:#3E7A9C;}.ai-rc.func-SD{background:rgba(234,199,208,0.24);color:#B06A7E;}.ai-rc.func-D{background:rgba(235,207,134,0.24);color:#A98A3A;}
+  .aip-preview{padding:10px 10px 22px;border-radius:12px;background:var(--glass-2);overflow-x:auto;scrollbar-width:none;}
+  .aip-preview::-webkit-scrollbar{display:none;}
+  /* 预览:与旋律区同款「长度=时值」的块 */
+  .ai-mel{display:flex;align-items:center;gap:3px;min-height:40px;}
+  .arn{position:relative;display:inline-flex;align-items:center;justify-content:flex-start;flex-shrink:0;box-sizing:border-box;
+    height:38px;padding:0 5px;border-radius:12px;background:var(--surface);box-shadow:var(--soft-sh-sm);font-size:15px;font-weight:700;color:var(--fg);}
+  .arn-l{flex-shrink:0;white-space:nowrap;}
+  .arn-tail{flex:1 1 auto;height:3px;margin-left:4px;border-radius:2px;min-width:0;background:linear-gradient(90deg,rgba(143,194,220,0.55),rgba(143,194,220,0.08));}
+  .arn.out{color:var(--accent-deep);background:rgba(235,207,134,0.16);}
+  .arn.out .arn-tail{background:linear-gradient(90deg,rgba(235,207,134,0.65),rgba(235,207,134,0.08));}
+  .arn.rest{color:var(--fg-muted);background:var(--glass-2);border:1.5px dashed var(--glass-brd);box-shadow:none;font-size:12px;}
+  .arn.tie{color:var(--primary-deep);background:linear-gradient(135deg,rgba(143,194,220,0.4),rgba(62,151,204,0.28));}
+  /* 音下方的脚下和弦名 */
+  .arn .arc{position:absolute;bottom:-17px;left:0;font-size:9.5px;font-weight:700;line-height:1;white-space:nowrap;padding:1px 5px;border-radius:6px;}
+  .arn .arc.func-T{color:#3E7A9C;background:rgba(143,194,220,0.22);}
+  .arn .arc.func-SD{color:#B06A7E;background:rgba(234,199,208,0.26);}
+  .arn .arc.func-D{color:#A98A3A;background:rgba(235,207,134,0.26);}
+  /* 和弦目标预览:块宽=时长 */
+  .arc-blk{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;height:38px;padding:0 8px;border-radius:11px;font-size:15px;font-weight:700;box-shadow:var(--soft-sh-sm);}
+  .arc-blk.func-T{background:rgba(143,194,220,0.2);color:#3E7A9C;}.arc-blk.func-SD{background:rgba(234,199,208,0.24);color:#B06A7E;}.arc-blk.func-D{background:rgba(235,207,134,0.24);color:#A98A3A;}
   .aip-acts{display:flex;gap:8px;margin-top:12px;}
   .aip-acts button{flex:1;border:none;border-radius:12px;padding:11px;font-family:var(--font);font-size:13.5px;font-weight:800;cursor:pointer;box-shadow:var(--soft-sh-sm);}
   .aip-fill{color:#fff;background:linear-gradient(140deg,var(--primary),var(--primary-deep));}
   .aip-redo{color:var(--ink-blue);background:var(--glass-2);}
+  .aip-try{color:#fff;background:linear-gradient(140deg,var(--accent-deep),#C9A94E);}
   .aip-acts button:active{transform:scale(0.96);}
   .aip-loading{text-align:center;color:var(--fg-dim);font-size:13px;padding:18px 0;}
   .aip-loading .dot{display:inline-block;animation:aipBlink 1.2s infinite;}
@@ -855,6 +871,14 @@
   body.ai-armed #melodyBox{box-shadow:0 0 0 2px rgba(125,180,214,0.55);}
   body.ai-armed.ai-tgt-chord .chord-track{box-shadow:0 0 0 2px rgba(125,180,214,0.55);}
   body.ai-armed.ai-tgt-chord #melodyBox{box-shadow:none;}
+  /* AI 小节点选格:覆盖在轨道上,点选整小节 */
+  .ai-mcell{position:absolute;top:2px;bottom:2px;z-index:7;border-radius:8px;cursor:pointer;box-sizing:border-box;
+    display:flex;align-items:flex-start;justify-content:flex-start;
+    background:rgba(143,194,220,0.10);border:1.5px dashed rgba(125,180,214,0.55);transition:background .12s,border-color .12s;}
+  .ai-mcell span{font-size:9px;font-weight:700;color:var(--primary-deep);opacity:0.7;padding:2px 4px;line-height:1;}
+  .ai-mcell:active{background:rgba(143,194,220,0.2);}
+  .ai-mcell.on{background:rgba(143,194,220,0.28);border-style:solid;border-color:rgba(125,180,214,0.9);box-shadow:0 0 10px rgba(125,180,214,0.35);}
+  .ai-mcell.on span{opacity:1;}
 </style>
 </head>
 <body>
@@ -1423,6 +1447,7 @@
       chip.style.width=chipWidth(beats)+'px';
       if(i===active)chip.classList.add('active');
       if(n.tie)chip.classList.add('tie');else if(n.rest)chip.classList.add('rest');else if(!n.inKey)chip.classList.add('out-chip');
+      if(n._ghost)chip.classList.add('ai-ghost'); // AI 试听中的未填入内容:半透明区别
       // 音头(标签)固定、永远包得住升降号;时值用右侧拖尾长短表达。十六分为最小音头,不带拖尾。
       chip.innerHTML='<span class="nl">'+n.label+'</span>'+((!n.tie&&!n.rest&&beats>0.25)?'<span class="dur-tail"></span>':'');
       chip.title=(n.tie?'延音':n.rest?'休止符':n.note+' · '+beatName(n.durMul))+' — 点击删除';
@@ -1463,6 +1488,7 @@
   }
 
   function beatName(dm){const b=4/dm;return ({1:'四分',1.5:'附点四分',0.5:'八分',0.75:'附点八分',0.25:'十六分'})[b]||(b+'拍');}
+  function durSymbol(dm){const b=4/dm;return ({1:'♩',1.5:'♩.',0.5:'♪',0.75:'♪.',0.25:'♬'})[b]||'♩';}
 
   // 音符交互:锚点态=加/改和弦;其余(录入/试音)点击=删除
   function chipInteract(chip,i){
@@ -1562,10 +1588,12 @@
   }
 
   function stopPlayback(){if(timer)clearTimeout(timer);timer=null;playing=false;active=-1;chainPlaying=false;
+    if(typeof aiPreviewRestore==='function'&&aiPreviewRestore){const r=aiPreviewRestore;aiPreviewRestore=null;r();} // 还原 AI 试听的临时数据
     const sl=melodyBox.scrollLeft;renderMelody();melodyBox.scrollLeft=sl; // 保留滚动位置,停止时不跳
     if(typeof highlightChordClip==='function')highlightChordClip(-1);
     btnPlay.textContent='▶';btnPlay.classList.remove('playing');
-    if(typeof renderPhraseBar==='function')renderPhraseBar();}
+    if(typeof renderPhraseBar==='function')renderPhraseBar();
+    if(typeof aiPanel!=='undefined'&&aiPanel&&aiPanel.classList.contains('show')&&typeof renderAIPanel==='function')renderAIPanel();}
 
   // opts:{fromStart 从头播,noLoop 忽略循环,chained 连播中(不打断已在播状态),onEnd 自然结束回调}
   function playMelody(opts){
@@ -1919,6 +1947,7 @@
   let aiSel=null;               // 旋律:{track:'melody',i0,i1,b0,b1};和弦:{track:'chord',b0,b1}
   let aiResult=null;            // 模型返回并解析后的结构
   let aiBusy=false;
+  let aiPreviewBackup=null,aiPreviewRestore=null; // AI 试听临时数据的备份/还原钩子
 
   // —— 气泡拖动 + 位置记忆(统一 left/top 定位,横竖都可拖)——
   const ORB=54;
@@ -1933,27 +1962,31 @@
     if(init)placeOrb(init.x,init.y);
     else placeOrb(window.innerWidth-ORB-18,window.innerHeight-ORB-88);
     let px=0,py=0,ox=0,oy=0,moved=false,dragging=false;
-    aiOrb.addEventListener('pointerdown',e=>{
-      e.preventDefault();dragging=true;moved=false;px=e.clientX;py=e.clientY;
-      ox=parseFloat(aiOrb.style.left)||0;oy=parseFloat(aiOrb.style.top)||0;
-      aiOrb.classList.add('dragging');try{aiOrb.setPointerCapture(e.pointerId);}catch(_){}
-    });
-    aiOrb.addEventListener('pointermove',e=>{
+    // 拖动/移动/结束都挂在 document 上:手指移出气泡范围也能持续跟手(修复"要先移动一点才拖得动")
+    const onMove=e=>{
       if(!dragging)return;e.preventDefault();
       const dx=e.clientX-px,dy=e.clientY-py;
-      if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
+      if(Math.abs(dx)>3||Math.abs(dy)>3)moved=true;
       placeOrb(ox+dx,oy+dy);
-    });
-    const end=()=>{if(!dragging)return;dragging=false;aiOrb.classList.remove('dragging');
+    };
+    const onUp=()=>{
+      if(!dragging)return;dragging=false;aiOrb.classList.remove('dragging');
+      document.removeEventListener('pointermove',onMove,{passive:false});
+      document.removeEventListener('pointerup',onUp);document.removeEventListener('pointercancel',onUp);
       if(moved){
-        // 吸附到最近的左/右屏幕边缘
-        const cx=(parseFloat(aiOrb.style.left)||0)+ORB/2,m=6;
+        const cx=(parseFloat(aiOrb.style.left)||0)+ORB/2,m=6; // 吸附最近的左/右屏幕边缘
         const snapX=(cx<window.innerWidth/2)?m:(window.innerWidth-ORB-m);
         placeOrb(snapX,parseFloat(aiOrb.style.top)||0);
         try{localStorage.setItem('ai_orb_pos',JSON.stringify({x:parseFloat(aiOrb.style.left),y:parseFloat(aiOrb.style.top)}));}catch(_){}
       }else openAI(); // 未拖动=点击
     };
-    aiOrb.addEventListener('pointerup',end);aiOrb.addEventListener('pointercancel',()=>{dragging=false;aiOrb.classList.remove('dragging');});
+    aiOrb.addEventListener('pointerdown',e=>{
+      e.preventDefault();e.stopPropagation();dragging=true;moved=false;px=e.clientX;py=e.clientY;
+      ox=parseFloat(aiOrb.style.left)||0;oy=parseFloat(aiOrb.style.top)||0;
+      aiOrb.classList.add('dragging');
+      document.addEventListener('pointermove',onMove,{passive:false});
+      document.addEventListener('pointerup',onUp);document.addEventListener('pointercancel',onUp);
+    });
     window.addEventListener('resize',()=>placeOrb(parseFloat(aiOrb.style.left)||0,parseFloat(aiOrb.style.top)||0));
   })();
 
@@ -1967,6 +2000,7 @@
     setTimeout(()=>document.addEventListener('pointerdown',outsideClose,true),0);
   }
   function closeAI(){
+    if(playing&&aiPreviewRestore)stopPlayback(); // 关面板时若在 AI 试听,停止并还原数据
     aiPanel.classList.remove('show');aiPanel.setAttribute('aria-hidden','true');
     aiOrb.classList.remove('hidden');
     document.body.classList.remove('ai-armed','ai-selecting','ai-tgt-chord');
@@ -1987,61 +2021,51 @@
     document.body.classList.toggle('ai-tgt-chord',t==='chord');
     if(t==='chord'&&panel!=='chord')setPanel('chord');
     if(t==='melody'&&panel!=='melody')setPanel('melody');
+    setTimeout(()=>renderMeasureCells(t),0); // 轨道渲染完后铺小节格
   }
 
-  // —— 框选 ——
-  let selRangeEl=null;
-  function clearSelRange(){if(selRangeEl){selRangeEl.remove();selRangeEl=null;}}
-  function drawSelRange(container,x,w){
-    clearSelRange();selRangeEl=document.createElement('div');selRangeEl.className='ai-selrange';
-    selRangeEl.style.left=x+'px';selRangeEl.style.width=Math.max(6,w)+'px';container.appendChild(selRangeEl);
-  }
-  // 拖选:统一吸附到「小节线」(measureLen 的整数倍),1~2 小节。旋律/和弦一致。
-  function snapMeasure(beat){const mL=measureLen();return Math.max(0,Math.round(beat/mL)*mL);}
+  // —— 小节点选(替代拖选:点小节格来选,天然对齐小节;点相邻扩到2小节,点已选取消)——
+  let mcells=[];
+  function clearSelRange(){mcells.forEach(c=>c.remove());mcells=[];}
   // 小节线的真实像素位置:旋律轨优先读 DOM 小节线(避免行内小节线宽度导致的偏移),否则回退 beatToX
   function measureX(beat,segs){
     const bl=melodyBox.querySelector('.bar-line[data-mb="'+beat+'"]');
     if(bl)return bl.offsetLeft+ (parseFloat(getComputedStyle(bl).marginLeft)||0);
     return beatToX(beat,segs);
   }
-  let selAutoRaf=null;
-  function stopSelAuto(){if(selAutoRaf){cancelAnimationFrame(selAutoRaf);selAutoRaf=null;}}
-  function beginSelect(e,track){
+  function renderMeasureCells(track){
+    clearSelRange();
     if(!document.body.classList.contains('ai-armed'))return;
-    if((track==='melody'&&aiTarget!=='melody')||(track==='chord'&&aiTarget!=='chord'))return;
-    e.preventDefault();e.stopPropagation();
-    document.body.classList.add('ai-selecting');
-    const segs=melodySegs();
-    const host=track==='melody'?melodyBox:chordTrack;
-    const inner=track==='melody'?melodyBox:chordInner;
-    const rect=host.getBoundingClientRect();
-    const mL=measureLen(),maxBeats=2*mL;
-    const anchorM=snapMeasure(xToBeat(e.clientX-rect.left+host.scrollLeft,segs));
-    let lastClientX=e.clientX;
-    const paint=()=>{
-      const curM=snapMeasure(xToBeat(lastClientX-rect.left+host.scrollLeft,segs));
-      let lo=Math.min(anchorM,curM),hi=Math.max(anchorM,curM);
-      if(hi<=lo)hi=lo+mL;            // 至少 1 小节
-      if(hi-lo>maxBeats)hi=lo+maxBeats; // 最多 2 小节
-      const x=(track==='melody'?measureX(lo,segs):beatToX(lo,segs));
-      const x2=(track==='melody'?measureX(hi,segs):beatToX(hi,segs));
-      drawSelRange(inner,x,x2-x);
-      aiSel={track,b0:lo,b1:hi};
-    };
-    // 指针靠近轨道左右边缘时自动横向滚动 → 可选到屏幕外的小节
-    const autoStep=()=>{
-      const edge=42,r=host.getBoundingClientRect();let d=0;
-      if(lastClientX>r.right-edge)d=Math.min(18,(lastClientX-(r.right-edge))/2);
-      else if(lastClientX<r.left+edge)d=-Math.min(18,((r.left+edge)-lastClientX)/2);
-      if(d){host.scrollLeft+=d;paint();}
-      selAutoRaf=requestAnimationFrame(autoStep);
-    };
-    const move=ev=>{lastClientX=ev.clientX;paint();};
-    selAutoRaf=requestAnimationFrame(autoStep);
-    const up=()=>{stopSelAuto();document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);
-      document.body.classList.remove('ai-selecting');finalizeSel();renderAIPanel();};
-    document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);
-    move(e);
+    const mL=measureLen(),segs=melodySegs();
+    const n=Math.max(4,Math.round(totalSpan()/mL));
+    const inner=(track==='melody')?melodyBox:chordInner;
+    if(!inner)return;
+    const px=(track==='melody')?(b=>measureX(b,segs)):(b=>beatToX(b,segs));
+    for(let m=0;m<n;m++){
+      const b0=m*mL,b1=(m+1)*mL,x=px(b0),w=px(b1)-x;
+      const cell=document.createElement('div');cell.className='ai-mcell';
+      if(aiSel&&aiSel.track===track&&b0>=aiSel.b0-1e-6&&b1<=aiSel.b1+1e-6)cell.classList.add('on');
+      cell.style.left=x+'px';cell.style.width=Math.max(12,w)+'px';
+      cell.innerHTML='<span>'+(m+1)+'</span>';
+      cell.addEventListener('click',ev=>{ev.stopPropagation();pickMeasure(m,track);});
+      inner.appendChild(cell);mcells.push(cell);
+    }
+  }
+  const AI_MAX_MEASURES=4; // 最多可选小节数
+  function pickMeasure(m,track){
+    const mL=measureLen();
+    let s0=(aiSel&&aiSel.track===track)?Math.round(aiSel.b0/mL):-1;
+    let cnt=(aiSel&&aiSel.track===track)?Math.round((aiSel.b1-aiSel.b0)/mL):0;
+    if(s0<0){aiSel={track,b0:m*mL,b1:(m+1)*mL};}                     // 新选 1 格
+    else if(m>=s0&&m<s0+cnt){                                       // 点已选区内
+      if(cnt===1)aiSel=null;                                        //   单格→取消
+      else aiSel={track,b0:m*mL,b1:(m+1)*mL};                       //   多格→缩成点中的这格
+    }
+    else if(m===s0-1&&cnt<AI_MAX_MEASURES)aiSel={track,b0:m*mL,b1:(s0+cnt)*mL};   // 紧邻左侧→向左扩
+    else if(m===s0+cnt&&cnt<AI_MAX_MEASURES)aiSel={track,b0:s0*mL,b1:(m+1)*mL};   // 紧邻右侧→向右扩
+    else aiSel={track,b0:m*mL,b1:(m+1)*mL};                         // 不相邻/已满→重选 1 格
+    if(aiSel)finalizeSel();
+    renderMeasureCells(track);renderAIPanel();
   }
   function finalizeSel(){
     if(!aiSel)return;
@@ -2096,6 +2120,10 @@
       ctx.before=collectMelody(Math.max(0,aiSel.i0-4),aiSel.i0-1);
       ctx.after=collectMelody(aiSel.i1+1,Math.min(melody.length-1,aiSel.i1+4));
       ctx.chordsUnder=collectChords(aiSel.b0,aiSel.b1); // 这段下方的和弦,供参考
+      // 全曲常用音(音级频次 top4,供旋律呼应,保持整曲统一);排除休止/延音/无 label
+      ctx.commonDegs=(function(){const cnt={};song.forEach(p=>(p&&p.melody||[]).forEach(n=>{if(n.rest||n.tie||!n.label)return;cnt[n.label]=(cnt[n.label]||0)+1;}));return Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]).slice(0,4).map(k=>({deg:k,count:cnt[k]}));})();
+      // 前一乐句开头动机(最多6音,供再现/模进呼应)
+      ctx.prevMotif=(function(){const p=song[curPhrase-1];if(!p||!p.melody||!p.melody.length)return null;const arr=[];for(const n of p.melody){if(arr.length>=6)break;arr.push({deg:n.rest?'0':n.tie?'—':n.label,beats:noteBeats(n)});}return arr.length?{section:SECTIONS[p.section||'verse']||'',notes:arr}:null;})();
     }else{
       ctx.selection=collectChords(aiSel.b0,aiSel.b1);
       ctx.melodyOver=(function(){const bs=noteBoundaries();const arr=[];melody.forEach((n,i)=>{if(bs[i+1]>aiSel.b0+1e-6&&bs[i]<aiSel.b1-1e-6)arr.push({deg:n.rest?'0':n.tie?'—':n.label,beats:noteBeats(n),atRel:+(bs[i]-aiSel.b0).toFixed(3)});});return arr;})();
@@ -2107,28 +2135,97 @@
   // —— Prompt(独立函数,便于后续单独调优)——
   function buildAIPrompt(ctx,userText){
     const isMel=ctx.target==='melody';
-    const sys='你是资深流行音乐编曲助手,精通旋律写作与和声编配。你要为一个「简谱点选式写歌 App」在用户框选的一小段区域内'
-      +(isMel?'创作旋律':'编配和弦')+'。严格遵守:\n'
-      +'1) 调性/拍号固定,不得转调;音以调式内为主,调外音仅作经过/装饰且需解决。\n'
-      +'2) 生成内容的总时值必须≈选区时值('+ctx.spanBeats+'拍,'+ctx.measureBeats+'拍/小节),不要超。\n'
-      +'3) 与选区前后的内容自然衔接,像一首完整作品的一部分,忌生硬。\n'
-      +'4) 只输出 JSON,不要多余文字,不要 markdown 代码块。\n'
-      +(isMel
-        ?'5) ★关键:必须贴合「这段下方和弦」——每个音尽量落在当前所在拍对应和弦的和弦内音上(尤其强拍/长音),非和弦音只作经过音短暂出现。不要无视和弦写 1-3-5 大白音阶。\n'
-         +'6) 旋律要有起伏和记忆点,避免每拍一个音的机械平均,善用长短结合、切分、留白(休止/延音)。\n'
-         +'JSON 格式:{"reason":"用一两句中文讲清为什么这样写、如何贴合和弦与情绪走向","notes":[{"deg":"简谱级数如 1/2/#4/b7,休止用 0,延音用 —","oct":0,"dur":"4|4.|8|8.|16","rest":false,"tie":false}]}。deg 用相对主音的简谱级数(不是绝对音名);oct 为八度偏移(-1/0/1);dur 是时值。'
-        :'5) ★和弦密度:流行歌通常「每小节 1 个和弦」,情绪推进处最多 2 个(如每 2 拍一个)。严禁一小节塞 3~4 个和弦。'+ctx.spanMeasures+' 小节最多给 '+Math.max(1,Math.ceil(ctx.spanMeasures*2))+' 个和弦,优先更少更稳。\n'
-         +'6) 要贴合「这段上方旋律」——所选和弦应包含该小节旋律的主要音(尤其强拍音)为和弦内音;走向符合功能进行(T→SD→D→T 之类),忌每小节都用主和弦。\n'
-         +'JSON 格式:{"reason":"用一两句中文讲清和声逻辑、如何配合旋律与情绪","chords":[{"beat":相对选区起点的拍数,"deg":1到7的调内级数,"quality":"maj|min|maj7|7|min7|sus2|sus4|dim|6"}]}。优先用调内级数 deg;beat 从 0 开始,每个和弦落在小节起点或半小节处。');
-    const user='【当前调性】'+ctx.key+'('+ctx.mode+',主音 '+ctx.tonic+'),拍号 '+ctx.timeSig
-      +(ctx.section?',当前段落:'+ctx.section:'')+(ctx.phraseDesc?',乐句描述:「'+ctx.phraseDesc+'」':'')
-      +'\n【选区】'+ctx.spanMeasures+' 小节 / '+ctx.spanBeats+' 拍,目标='+(isMel?'旋律':'和弦')
-      +'\n【选区现有内容】'+JSON.stringify(ctx.selection)
-      +(isMel?('\n【选区前】'+JSON.stringify(ctx.before)+'\n【选区后】'+JSON.stringify(ctx.after)+'\n【这段下方和弦】'+JSON.stringify(ctx.chordsUnder))
-             :('\n【这段上方旋律】'+JSON.stringify(ctx.melodyOver)+'\n【可用调内级数和弦】'+JSON.stringify(ctx.diatonic)))
-      +'\n【用户需求】'+(userText||'(未填,请按上下文给出最自然动听的写法)')
-      +'\n请生成替换选区的'+(isMel?'旋律':'和弦')+',返回 JSON。';
-    return {system:sys,user:user};
+    const maxCh=Math.max(1,Math.ceil(ctx.spanMeasures*2));
+
+    // —— 共同理念 + 硬性规则 ——
+    const philosophy=[
+      '你是既懂乐理、又懂"怎么写才好听"的资深流行音乐人,为一个「简谱点选式写歌 App」在用户框选的一小段(≤4小节)里'+(isMel?'创作旋律':'编配和弦')+'。',
+      '你的目标不是"填进正确的音",而是写出自然、动听、有情绪、能被记住的音乐——像人真的在为一首歌谱曲,而不是机械填格。',
+      '',
+      '【硬性规则】',
+      '1) 调性/拍号固定,不得转调;以调式内音为主,调外音只作短暂经过/装饰并立即解决。',
+      '2) 生成内容总时值必须≈选区时值('+ctx.spanBeats+'拍,'+ctx.measureBeats+'拍/小节),不超不少。',
+      '3) 与选区前后自然衔接,是一首完整作品的一部分,忌突兀。',
+      '4) 只输出 JSON,无多余文字、无 markdown 代码块。'
+    ];
+
+    // —— 把用户的话翻译成手法(两种目标共用)——
+    const mood=[
+      '',
+      '【把用户的话翻译成手法】(【用户需求】里的形容词按下表落地;没写就按段落与情绪自然发挥)',
+      '· 欢快/明亮/活泼 → 旋律:节奏密一些、多上行与跳音、附点+切分带蹦跳感、落在3/5、音区偏高;和声:明亮大调进行(1-5-6-4 / I-IV-V),少用阴暗级数,可用属七推动。',
+      '· 律动/动感/带感 → 旋律:定一个节奏型反复、加切分与弱起、句尾留白呼吸;和声:和弦密度压低、稳住让节奏当主角,换和弦落在强拍。',
+      '· 忧伤/深情/走心 → 旋律:级进下行为主、用"高→低二度"的叹息音型、放慢多留白、带6/b7色彩;和声:小调级数(vi/ii/iii)、下行贝斯线、maj7/min7柔化。',
+      '· 空灵/梦幻/治愈 → 旋律:长音、开放的四五度跳进、贴五声避半音摩擦、音区偏高、大量留白;和声:sus2/sus4/add9/maj7,悬而不急着解决。',
+      '· 抓耳/上头/记忆点 → 旋律:强节奏动机+模进反复,hook落在这句高点,重复里留一处小变化;和声:用耳熟套路(4536251/6451),副歌落主和弦制造到达感。',
+      '· 大气/激昂/燃 → 旋律:阶梯式上行推向高点、宽音程、长音撑住;和声:强功能进行、属和弦蓄力后回主和弦。',
+      '· 温柔/舒缓/安静 → 旋律:级进为主、中低音区、平稳节奏少跳进;和声:maj7/add9柔和色彩、缓慢换和弦、避免刺耳属七。',
+      '(表里没有的形容词,理解它的情绪后照同样思路落地。)',
+      '',
+      '【段落决定能量】(见【当前段落】【乐句描述】;乐句描述是用户对情绪的直接要求,优先级最高)',
+      '· 主歌:平稳内敛、音区中低、叙述感,给副歌留空间。 · 预副:上行制造张力推向副歌,常停在属(D)。',
+      '· 副歌:记忆点最强,音区最高、动机最鲜明、能量最大,落主和弦有到达感。 · 桥:换色彩做对比、打破重复(仍不转调)。',
+      '· 前奏/间奏/尾奏:器乐化,可留白或渐弱收束。'
+    ];
+
+    // —— 旋律创作手艺 ——
+    const melCraft=[
+      '',
+      '【怎样写出好听的旋律】',
+      'A. 用"动机"搭骨架:先想一个2–4音的小音型(它的节奏+起伏就是记忆点),再靠 重复/模进(整体上移或下移几度)/轻微变奏 展开它——好听=重复中有变化,而不是每个音都新。',
+      'B. 呼应上下文:【选区前】若有鲜明音型或落音,就再现或模进它,让这段像同一个人写的;结尾音要顺畅接到【选区后】的第一个音;落音优先用【全曲常用音】与稳定音(1/3/5),整曲才统一;有【前一乐句开头】时可对它做呼应或模进。',
+      'C. 线条有方向和高点:一句要有走向,通常在后2/3处安排一个最高音(黄金高点),之前铺垫上行、之后回落收束;以级进(相邻音级)为主、跳进为点缀,出现大跳(≥四度)后用反向级进把音填回来,别一直乱蹦。',
+      'D. 张力与解决,句子收得住:导音7倾向解决到1,非和弦音经过后落回和弦内音;这一句的收束音落在稳定音(强拍+主和弦最稳),让人觉得停得下来。',
+      'E. 节奏与律动:律动=一个节奏型反复+恰当切分,不是乱变;选定一个节奏动机贯穿,再用切分(音头提前/延后半拍)、弱起(小节前起拍)、附点制造推动;长短结合、句尾留白呼吸,忌每拍一个音的机械平均。',
+      'F. 贴合脚下和弦(见【这段下方和弦】):每个音尽量落在当前拍所属和弦的和弦内音(尤其强拍/长音),非和弦音只作短暂经过,别无视和弦硬写1-3-5大白音阶。',
+      '',
+      '【输出 JSON】{"reason":"...","notes":[{"deg":"简谱级数如1/2/#4/b7,休止=0,延音=—","oct":0,"dur":"4|4.|8|8.|16","rest":false,"tie":false}]}',
+      'deg 用相对主音的简谱级数(不是绝对音名);oct 八度偏移-1/0/1;dur 是时值。'
+    ];
+
+    // —— 和声编配手艺 ——
+    const chCraft=[
+      '',
+      '【怎样编出好听的和声】',
+      'A. 密度克制:流行歌通常每小节1个和弦,推进处最多2个(每2拍一个),严禁一小节塞3~4个;'+ctx.spanMeasures+'小节最多给'+maxCh+'个,优先更少更稳。',
+      'B. 有走向有呼吸:按功能进行 T→SD→D→T 推进,别每小节都回主和弦;属(D)制造想回家的期待,主(T)给到达与安定;换和弦点对齐乐句呼吸(通常小节头)。',
+      'C. 包住旋律(见【这段上方旋律】):所选和弦要把该小节旋律的主要音(尤其强拍/长音)含在和弦内音里,和声与旋律才咬合。',
+      'D. 用色彩承接情绪:温柔/空灵→maj7/sus2/add9;忧伤→小调级数与下行贝斯线;欢快→明亮大调进行;抓耳→耳熟套路(4536251/6451/1-5-6-4);想更有律动时和弦反而更要稳,把动感交给节奏。',
+      'E. 呼应习惯:优先沿用这首歌已经走得顺的进行与落法,保持整曲统一。',
+      '',
+      '【输出 JSON】{"reason":"...","chords":[{"beat":相对选区起点的拍数(从0起,落在小节头或半小节),"deg":1到7的调内级数,"quality":"maj|min|maj7|7|min7|sus2|sus4|dim|6"}]}',
+      '优先用调内级数 deg;quality 不填则用该级数默认三和弦。'
+    ];
+
+    // —— reason 写法要求 ——
+    const reasonReq=[
+      '',
+      'reason 用有温度的口语(像懂音乐的朋友在解释),讲清:①这段想营造什么情绪/画面 ②用了什么手法(比如"呼应了前面的音型、上行推到高点、加了切分更有律动") ③怎么回应了你的要求或前后文。别堆术语。'
+    ];
+
+    const sys=philosophy.concat(mood, isMel?melCraft:chCraft, reasonReq).join('\n');
+
+    // —— User:上下文数据 ——
+    const up=[
+      '【当前调性】'+ctx.key+'('+ctx.mode+',主音 '+ctx.tonic+'),拍号 '+ctx.timeSig
+        +(ctx.section?',当前段落:'+ctx.section:'')+(ctx.phraseDesc?',乐句描述:「'+ctx.phraseDesc+'」':''),
+      '【选区】'+ctx.spanMeasures+' 小节 / '+ctx.spanBeats+' 拍,目标='+(isMel?'旋律':'和弦'),
+      '【选区现有内容】'+JSON.stringify(ctx.selection)
+    ];
+    if(isMel){
+      up.push('【选区前】'+JSON.stringify(ctx.before));
+      up.push('【选区后】'+JSON.stringify(ctx.after));
+      up.push('【这段下方和弦】'+JSON.stringify(ctx.chordsUnder));
+      up.push('【全曲常用音(优先呼应)】'+JSON.stringify(ctx.commonDegs||[]));
+      if(ctx.prevMotif)up.push('【前一乐句开头(可呼应/模进)】'+JSON.stringify(ctx.prevMotif));
+    }else{
+      up.push('【这段上方旋律】'+JSON.stringify(ctx.melodyOver));
+      up.push('【可用调内级数和弦】'+JSON.stringify(ctx.diatonic));
+    }
+    up.push('【用户需求】'+(userText||'(未填,请按上下文与段落给出最自然动听的写法)'));
+    up.push('请生成替换选区的'+(isMel?'旋律':'和弦')+',返回 JSON。');
+
+    return {system:sys,user:up.join('\n')};
   }
 
   async function callDeepSeek(sys,user){
@@ -2169,16 +2266,39 @@
   }
   function durOf(d){return 4/(DUR_BEATS[d]!=null?DUR_BEATS[d]:1);}
 
-  // —— 结果预览(复用上方块样式观感)——
+  // —— 结果预览:与旋律区同款「用长度表示时值」的块;每音下方标脚下和弦 ——
   function previewHTML(r){
     if(r.target==='melody'){
-      return r.items.map(it=>{
-        if(it.rest)return '<span class="ai-rn rest">0</span>';
-        if(it.tie)return '<span class="ai-rn tie">—</span>';
-        return '<span class="ai-rn'+(it.inKey?'':' out')+'">'+it.label+'<small>'+beatName(it.durMul)+'</small></span>';
-      }).join('');
+      // 选区起点拍 + 覆盖该段的和弦(优先 AI 生成时用到的下方和弦),给每个音标脚下和弦名
+      const base=aiSel?aiSel.b0:0;
+      const spans=chords.map((c,ci)=>({name:chordName(c),func:c.func,b0:c.at,b1:chordEndBeat(ci)}));
+      const chordAt=b=>{for(let k=spans.length-1;k>=0;k--){if(b>=spans[k].b0-1e-6&&b<spans[k].b1-1e-6)return spans[k];}return null;};
+      let cum=base,lastNm=null,h='<div class="ai-mel">';
+      r.items.forEach(it=>{
+        const beats=4/it.durMul,w=chipWidth(beats);
+        const ch=(!it.rest&&!it.tie)?chordAt(cum):null;
+        let tag='';
+        if(ch&&ch.name!==lastNm){tag='<span class="arc func-'+ch.func+'">'+ch.name+'</span>';lastNm=ch.name;}
+        const cls=it.tie?'tie':it.rest?'rest':(it.inKey?'':'out');
+        const lbl=it.tie?'—':it.rest?'0':it.label;
+        h+='<span class="arn '+cls+'" style="width:'+w+'px">'
+          +'<span class="arn-l">'+lbl+'</span>'
+          +((!it.tie&&!it.rest&&beats>0.25)?'<span class="arn-tail"></span>':'')
+          +tag+'</span>';
+        cum+=beats;
+      });
+      return h+'</div>';
     }
-    return r.items.map(c=>'<span class="ai-rc func-'+c.func+'">'+chordName(c)+'</span>').join('');
+    // 和弦目标:块宽按和弦覆盖拍数,直观看到时长
+    const base=aiSel?aiSel.b0:0,end=aiSel?aiSel.b1:base;
+    const sorted=r.items.slice().sort((a,b)=>a.at-b.at);
+    let h='<div class="ai-mel">';
+    sorted.forEach((c,idx)=>{
+      const next=idx+1<sorted.length?sorted[idx+1].at:end;
+      const beats=Math.max(0.5,next-c.at),w=Math.max(44,chipWidth(beats));
+      h+='<span class="arc-blk func-'+c.func+'" style="width:'+w+'px">'+chordName(c)+'</span>';
+    });
+    return h+'</div>';
   }
 
   // —— 应用:替换选区 ——
@@ -2198,6 +2318,33 @@
     flash('已填入');closeAI();
   }
 
+  // —— 试听:把 AI 结果临时合入当前乐句,从段落开头完整播放,停止后还原(不改数据)——
+  function buildPreviewData(){
+    // 返回临时的 melody/chords(应用了 aiResult),不改全局
+    let mel=melody.map(x=>Object.assign({},x)), chs=chords.map(x=>Object.assign({},x));
+    if(!aiResult||!aiSel)return {mel,chs};
+    if(aiTarget==='melody'){
+      const del=aiSel.i1-aiSel.i0+1;
+      mel.splice(aiSel.i0,Math.max(0,del),...aiResult.items.map(x=>Object.assign({},x,{_ghost:true})));
+    }else{
+      chs=chs.filter(c=>!(c.at>=aiSel.b0-1e-6&&c.at<aiSel.b1-1e-6));
+      aiResult.items.forEach(c=>chs.push(Object.assign({},c,{_ghost:true})));
+      chs.sort((a,b)=>a.at-b.at);
+    }
+    return {mel,chs};
+  }
+  function previewPlayAI(){
+    if(playing){stopPlayback();return;}
+    if(!aiResult||!aiSel){flash('先生成内容');return;}
+    const {mel,chs}=buildPreviewData();
+    aiPreviewBackup={melody,chords};   // 备份真实引用
+    melody=mel;chords=chs;             // 临时替换
+    renderMelody();renderChordTrack();
+    const restore=()=>{ if(aiPreviewBackup){melody=aiPreviewBackup.melody;chords=aiPreviewBackup.chords;aiPreviewBackup=null;renderMelody();renderChordTrack();} };
+    aiPreviewRestore=restore; // 供 stopPlayback(手动停止/播完)时还原
+    playMelody({fromStart:true,noLoop:true,onEnd:()=>{stopPlayback();}});
+  }
+
   // —— 面板渲染 ——
   function renderAIPanel(){
     const hasKey=!!(localStorage.getItem(DS_KEY_LS)||'').trim();
@@ -2208,9 +2355,9 @@
     // 选区信息
     if(aiSel){
       const span=((aiSel.b1-aiSel.b0)/measureLen()).toFixed(2).replace(/\.?0+$/,'');
-      h+='<div class="aip-selinfo">已选 <b>'+(aiTarget==='melody'?'旋律':'和弦')+'</b> · 约 <b>'+span+'</b> 小节。可重新在'+(aiTarget==='melody'?'旋律轨':'和弦轨')+'上拖选。</div>';
+      h+='<div class="aip-selinfo">已选 <b>'+(aiTarget==='melody'?'旋律':'和弦')+'</b> · <b>'+span+'</b> 小节。点相邻格可扩(最多 4 小节),点已选可取消。</div>';
     }else{
-      h+='<div class="aip-selinfo empty">👆 在'+(aiTarget==='melody'?'上方旋律轨':'和弦轨')+'上<b>拖选</b>一段(≤2 小节)让 AI 来写</div>';
+      h+='<div class="aip-selinfo empty">👆 在'+(aiTarget==='melody'?'上方旋律轨':'和弦轨')+'上<b>点选小节格</b>(1~4 小节)让 AI 来写</div>';
     }
     h+='<div class="aip-lb">想怎么写(可选)</div>';
     h+='<textarea class="aip-note" id="aipNote" rows="2" maxlength="120" placeholder="例:更抓耳、上行推向高点 / 换个忧伤的和声…"></textarea>';
@@ -2226,7 +2373,8 @@
       h+='<div class="aip-result">';
       if(aiResult.reason)h+='<div class="aip-reason">'+esc(aiResult.reason)+'</div>';
       h+='<div class="aip-preview">'+previewHTML(aiResult)+'</div>';
-      h+='<div class="aip-acts"><button class="aip-fill" id="aipFill">填入这段</button><button class="aip-redo" id="aipRedo">再写一版</button></div>';
+      h+='<div class="aip-acts"><button class="aip-try" id="aipTry">'+(playing?'⏹ 停止':'▶ 试听整段')+'</button><button class="aip-redo" id="aipRedo">再写一版</button></div>';
+      h+='<div class="aip-acts"><button class="aip-fill" id="aipFill">✓ 填入这段</button></div>';
       h+='</div>';
     }
     aipBody.innerHTML=h;
@@ -2236,6 +2384,7 @@
     const kc=$('aipKeyClear');if(kc)kc.addEventListener('click',e=>{e.preventDefault();localStorage.removeItem(DS_KEY_LS);renderAIPanel();});
     const fl=$('aipFill');if(fl)fl.addEventListener('click',applyAIResult);
     const rd=$('aipRedo');if(rd)rd.addEventListener('click',runAI);
+    const tr=$('aipTry');if(tr)tr.addEventListener('click',()=>{previewPlayAI();renderAIPanel();});
   }
   async function runAI(){
     if(!aiSel){flash('先在轨道上拖选一段');return;}
@@ -2255,8 +2404,7 @@
   }
 
   // 轨道上绑定框选(捕获阶段,armed 时拦截,避免触发音符/和弦原有点击)
-  melodyBox.addEventListener('pointerdown',e=>{if(document.body.classList.contains('ai-armed')&&aiTarget==='melody')beginSelect(e,'melody');},true);
-  if(chordTrack)chordTrack.addEventListener('pointerdown',e=>{if(document.body.classList.contains('ai-armed')&&aiTarget==='chord')beginSelect(e,'chord');},true);
+  // AI 小节点选:改为点小节格(renderMeasureCells 里绑 click),不再用轨道拖选
 
   function renderChordTrack(){
     if(!chordInner)return;
@@ -2283,7 +2431,7 @@
       const fadeEnd=Math.min(chordEndBeat(i),start+mL); // 渐隐最长一小节
       const left=beatToX(start,segs),w=Math.max(34,beatToX(fadeEnd,segs)-left);
       const slot=document.createElement('div');slot.dataset.i=i;
-      slot.className='chord-clip func-'+c.func;
+      slot.className='chord-clip func-'+c.func+(c._ghost?' ai-ghost':'');
       slot.style.left=left+'px';slot.style.width=w+'px';
       // 左侧把手=拖动热区(触摸时才独占,不与音轨滑动打架);其余区域点=选中/试听
       slot.innerHTML='<span class="cc-start"></span><span class="cc-drag" title="拖动移位">⋮</span><span class="cname">'+chordName(c)+'</span>';
