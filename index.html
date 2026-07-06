@@ -789,6 +789,7 @@
   .ai-orb svg{filter:drop-shadow(0 1px 2px rgba(80,120,150,0.4));}
   @keyframes orbBreathe{0%,100%{box-shadow:var(--neu-raise),0 6px 18px rgba(125,180,214,0.35)}50%{box-shadow:var(--neu-raise),0 8px 24px rgba(125,180,214,0.55),0 0 0 4px rgba(166,210,236,0.18)}}
   .ai-orb.hidden{opacity:0;pointer-events:none;transform:scale(0.5);}
+  body.stage-on .ai-orb{opacity:0;pointer-events:none;transform:scale(0.5);} /* 成曲页不显示悬浮AI气泡 */
 
   /* ══ AI 面板:桌面浮窗 / 手机底部弹窗 ══ */
   .ai-scrim{position:fixed;inset:0;z-index:158;background:transparent;opacity:0;pointer-events:none;transition:opacity .25s;}
@@ -1176,6 +1177,7 @@
     <button class="s-tog on" id="stgPlay">▶ 播放</button>
     <button class="s-tog" id="stgLyric">✍️ 填歌词</button>
     <button class="s-tog" id="stgNote">＋注释</button>
+    <button class="s-tog ai" id="stgAI">✨ 生成AI赏析</button>
   </div>
   <div class="stage-scroll">
     <div id="stageScore"></div>
@@ -3692,6 +3694,7 @@
   $('stageBack').addEventListener('click',closeStage);
   { const cta=$('stageCTA'); if(cta)cta.addEventListener('click',openStage); }
   $('stgPlay').addEventListener('click',stagePlayToggle);
+  $('stgAI').addEventListener('click',stageGenAI);
   $('stageExport').addEventListener('click',()=>flash('导出功能待接入(MIDI / 长图 / 乐谱等,你定了我接)'));
   $('stgLyric').addEventListener('click',function(){
     if(lyricMode){endLyricInput();}else{document.body.classList.remove('stg-note');$('stgNote').classList.remove('on');startLyricInput();}
