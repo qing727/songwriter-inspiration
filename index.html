@@ -3517,6 +3517,7 @@
     const mL=measureLen();
     const items=[],chordEvents=[],secByMeasure={};
     let gb=0;
+    const phraseRanges=[];
     song.forEach(p=>{
       const pStart=gb;
       (p.melody||[]).forEach(n=>{
@@ -3528,10 +3529,16 @@
         gb+=beats;
       });
       (p.chords||[]).forEach(c=>chordEvents.push({at:pStart+(c.at||0),c}));
-      const mS=Math.floor(pStart/mL+1e-6),mE=Math.max(mS+1,Math.ceil(gb/mL-1e-6));
-      for(let m=mS;m<mE;m++)secByMeasure[m]=p.section||'verse';
+      phraseRanges.push({start:pStart,end:gb,section:p.section||'verse'}); // 乐句的拍范围+段落
     });
     const totalBeats=gb,measures=Math.max(1,Math.ceil(totalBeats/mL));
+    // 每个小节的段落 = 谁拥有这个小节的"强拍(小节头)",避免后句覆盖前句
+    let prevSec='verse';
+    for(let m=0;m<measures;m++){
+      const db=m*mL+1e-6; let sec=null;
+      for(const r of phraseRanges){if(db>=r.start&&db<r.end){sec=r.section;break;}}
+      secByMeasure[m]=sec||prevSec;prevSec=secByMeasure[m];
+    }
     chordEvents.sort((a,b)=>a.at-b.at);
     const chordSeq=[];
     for(let m=0;m<measures;m++){const ms=m*mL;let cur=null;chordEvents.forEach(e=>{if(e.at<=ms+1e-6)cur=e.c;});if(!cur&&chordEvents.length)cur=chordEvents[0].c;chordSeq[m]=cur;}
@@ -3547,20 +3554,23 @@
     stageScore.innerHTML='';
     const W=Math.max(200,(stageScore.clientWidth||330)-28),mL=SD.mL; // 减去段落卡左右内边距
     let mpr=Math.max(2,Math.min(4,Math.floor(W/(30*mL))));
-    const rows=Math.ceil(SD.measures/mpr),beatPx=W/(mpr*mL);
+    const beatPx=W/(mpr*mL);
     const CH_TOP=16,CBAND_T=24,CBAND_H=40,JP_Y=72,LY_Y=104,ROWH=124;
     const yOf=v=>CBAND_T+(SD.maxV-v)/SD.span*CBAND_H;
     const cxOf=(it,rs)=>((it.start-rs)+(it.beats>=1?0.5:it.beats/2))*beatPx;
-    let prevSec=null,curCard=null;
-    for(let r=0;r<rows;r++){
-      const m0=r*mpr,m1=Math.min(m0+mpr,SD.measures),rowStart=m0*mL;
-      // 段落切换 → 开一张新卡,卡顶标段落名(一个部分一张卡)
-      const rowSec=SD.secByMeasure[m0]||'verse';
-      if(rowSec!==prevSec){
-        curCard=document.createElement('div');curCard.className='stage-seccard sec-'+rowSec;
-        const cap=document.createElement('div');cap.className='sec-cap '+rowSec;cap.textContent=SEC_CN[rowSec]||'';
-        curCard.appendChild(cap);stageScore.appendChild(curCard);prevSec=rowSec;
-      }
+    // ① 先按段落类型把小节切成连续段:段落类型一变就断卡,相邻同类型自动并成一卡
+    const segs=[];
+    for(let m=0;m<SD.measures;m++){
+      const sec=SD.secByMeasure[m]||'verse',last=segs[segs.length-1];
+      if(last&&last.sec===sec)last.m1=m+1;else segs.push({sec,m0:m,m1:m+1});
+    }
+    // ② 每段一张卡,卡内部再按 mpr 折行
+    segs.forEach(seg=>{
+      const curCard=document.createElement('div');curCard.className='stage-seccard sec-'+seg.sec;
+      const cap=document.createElement('div');cap.className='sec-cap '+seg.sec;cap.textContent=SEC_CN[seg.sec]||'';
+      curCard.appendChild(cap);stageScore.appendChild(curCard);
+      for(let m0=seg.m0;m0<seg.m1;m0+=mpr){
+      const m1=Math.min(m0+mpr,seg.m1),rowStart=m0*mL;
       const row=document.createElement('div');row.className='prow';row.style.height=ROWH+'px';
       for(let mi=m0;mi<m1;mi++){
         const c=SD.chordSeq[mi],x=(mi*mL-rowStart)*beatPx;
@@ -3597,8 +3607,9 @@
         if(a){const mk=document.createElement('div');mk.className='anno '+(a.type==='user'?'user':'ai');mk.style.left=cx+'px';mk.style.top=(cy-13)+'px';mk.textContent=a.type==='user'?'✎':'✦';
           mk.addEventListener('click',e=>{e.stopPropagation();showAnnoPop(mk,it,a);});row.appendChild(mk);}
       });
-      (curCard||stageScore).appendChild(row);
-    }
+      curCard.appendChild(row);
+      }
+    });
   }
 
   function onStageNote(it){
