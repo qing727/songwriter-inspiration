@@ -1036,12 +1036,17 @@
   body.is-desktop .lib-inner{max-width:860px;}
   .lib-head{height:10px;}
   .lib-shelf{display:flex;flex-direction:column;gap:14px;}
-  /* ══ 唱片卡(可装多曲):黑胶 + 展开曲目 ══ */
-  .disc-card{background:var(--surface);border-radius:22px;box-shadow:var(--soft-sh-sm);overflow:hidden;
-    border:1px solid rgba(255,255,255,0.7);transition:box-shadow .25s,transform .18s,outline-color .18s;outline:2px solid transparent;outline-offset:-2px;}
-  .disc-card.open{box-shadow:0 10px 30px rgba(120,150,190,.2);}
-  .disc-card.drop-hot{outline-color:var(--primary);box-shadow:0 0 0 3px rgba(143,194,220,.3),0 10px 26px rgba(125,180,214,.35);transform:scale(1.012);}
-  .disc-top{display:flex;align-items:center;gap:15px;padding:15px 16px;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;}
+  /* ══ 唱片卡(可装多曲):半透明玻璃 + 一摞层叠感 + 黑胶 ══ */
+  .disc-card{position:relative;background:var(--glass);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    border-radius:22px;overflow:hidden;border:1px solid var(--glass-brd);
+    box-shadow:var(--soft-sh-sm);transition:box-shadow .25s,transform .18s,outline-color .18s;outline:2px solid transparent;outline-offset:-2px;}
+  /* 唱片(非单曲)= 一摞唱片盒的感觉:底部露出两层渐窄的半透明边 */
+  .disc-card:not(.single-card){margin-bottom:12px;
+    box-shadow:0 6px 0 -1px rgba(255,255,255,.42),0 7px 13px -3px rgba(120,150,190,.2),
+               0 12px 0 -3px rgba(255,255,255,.28),0 13px 15px -5px rgba(120,150,190,.13),var(--soft-sh-sm);}
+  .disc-card:not(.single-card).open{box-shadow:0 6px 0 -1px rgba(255,255,255,.42),0 12px 0 -3px rgba(255,255,255,.28),0 12px 30px rgba(120,150,190,.22);}
+  .disc-card.drop-hot{outline-color:var(--primary);box-shadow:0 0 0 3px rgba(143,194,220,.35),0 12px 28px rgba(125,180,214,.4)!important;transform:scale(1.015);}
+  .disc-top{display:flex;align-items:center;gap:15px;padding:16px 16px 16px 15px;cursor:pointer;position:relative;-webkit-tap-highlight-color:transparent;}
   /* ── 黑胶圆盘:拟态半透明黑 + 极细灰纹 + 更大中心封面 ── */
   .vinyl{position:relative;width:78px;height:78px;flex-shrink:0;}
   .vinyl-disc{position:absolute;inset:0;border-radius:50%;
@@ -1090,9 +1095,14 @@
   .single-card .song-mark i{width:3px;}
   .song-mark i:nth-child(1){height:38%}.song-mark i:nth-child(2){height:72%}.song-mark i:nth-child(3){height:100%}
   .song-mark i:nth-child(4){height:55%}.song-mark i:nth-child(5){height:84%}.song-mark i:nth-child(6){height:30%}
-  /* ══ 单曲卡(横排):音纹标 + 名字 ══ */
-  .single-card{display:flex;align-items:center;gap:14px;padding:14px 14px 14px 18px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  /* ══ 单曲卡(横排,明显更轻薄、无一摞层叠) ══ */
+  .single-card{display:flex;align-items:center;gap:13px;padding:11px 12px 11px 18px;cursor:pointer;-webkit-tap-highlight-color:transparent;
+    background:var(--glass-2);border-radius:16px;}
+  .single-card .disc-name{font-size:15px;font-weight:700;}
+  .single-card .disc-sub{font-size:11px;}
   .single-card:active{transform:scale(.99);}
+  /* 可拖拽项:禁选中/长按菜单,保证长按拖拽顺畅 */
+  [data-song]{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;}
   /* 拖拽 */
   .disc-card.dragging,.song-row.dragging{opacity:.35;}
   .drag-ghost{position:fixed;z-index:460;pointer-events:none;left:0;top:0;padding:9px 14px;border-radius:13px;
@@ -3582,51 +3592,61 @@
     const ns=$('libNewSong');if(ns)ns.addEventListener('click',newSingleSong);
     const na=$('libNewAlbum');if(na)na.addEventListener('click',newAlbum); }
 
-  // ═══ 拖拽把乐曲拖进唱片:手机长按拾起,电脑按住拖动;拖到唱片卡上高亮,松手移入 ═══
-  let dg=null; // {id,ghost,started,sx,sy,timer,hot}
+  // ═══ 拖拽把乐曲拖进唱片:手机长按拾起(原生 touch,拾起后阻止滚动),电脑按住拖动 ═══
+  let dg=null; // {id,started,sx,sy,timer,hot,ghost}
   let dragSuppressClick=false;
-  function dgHitAlbum(x,y){const el=document.elementFromPoint(x,y);const card=el&&el.closest&&el.closest('.disc-card[data-album]');return card&&card.dataset.album?card:null;}
-  function dgStart(){
-    if(!dg)return;dg.started=true;dragSuppressClick=true;closeMenu();
+  function dgIgnore(el){return el.closest&&(el.closest('[data-menu]')||el.closest('[data-newin]')||el.closest('.ren-inp'));}
+  function dgBegin(id,x,y){dg={id,started:false,sx:x,sy:y,timer:null,hot:null,ghost:null};}
+  function dgActivate(){
+    if(!dg||dg.started)return;
+    dg.started=true;dragSuppressClick=true;closeMenu();
     const src=libShelf.querySelector('[data-song="'+dg.id+'"]');if(src)src.classList.add('dragging');
     const s=loadSaves().find(x=>x.id===dg.id);
     const g=document.createElement('div');g.className='drag-ghost';
-    g.innerHTML='<span class="song-mark"><i></i><i></i><i></i><i></i><i></i><i></i></span><span>'+esc(s?s.name:'乐曲')+'</span>';
-    document.body.appendChild(g);dg.ghost=g;dgMoveGhost(dg.sx,dg.sy);
-    if(navigator.vibrate)navigator.vibrate(12);
+    g.innerHTML=MARK+'<span>'+esc(s?s.name:'乐曲')+'</span>';
+    document.body.appendChild(g);dg.ghost=g;dgGhost(dg.sx,dg.sy);
+    if(navigator.vibrate)navigator.vibrate(14);
   }
-  function dgMoveGhost(x,y){if(dg&&dg.ghost){dg.ghost.style.left=x+'px';dg.ghost.style.top=y+'px';}}
-  function dgSetHot(card){if(dg&&dg.hot===card)return;if(dg&&dg.hot)dg.hot.classList.remove('drop-hot');if(dg)dg.hot=card;if(card)card.classList.add('drop-hot');}
-  libShelf.addEventListener('pointerdown',e=>{
-    if(e.target.closest&&(e.target.closest('[data-menu]')||e.target.closest('[data-newin]')||e.target.closest('.ren-inp')))return;
-    const row=e.target.closest&&e.target.closest('[data-song]');if(!row)return;
-    const id=row.dataset.song;const coarse=window.matchMedia('(pointer:coarse)').matches;
-    dg={id,ghost:null,started:false,sx:e.clientX,sy:e.clientY,timer:null,hot:null};
-    if(coarse){dg.timer=setTimeout(dgStart,380);} // 手机:长按拾起
-    // 电脑:等移动超过阈值再拾起(见 pointermove)
-  },true);
-  libShelf.addEventListener('pointermove',e=>{
-    if(!dg)return;
-    if(!dg.started){
-      const moved=Math.abs(e.clientX-dg.sx)+Math.abs(e.clientY-dg.sy);
-      const coarse=window.matchMedia('(pointer:coarse)').matches;
-      if(coarse){if(moved>14&&!dg.timer){/*已启动*/}if(moved>14&&dg.timer){clearTimeout(dg.timer);dg.timer=null;dg=null;return;}/*长按前移动=滚动,取消拖拽*/return;}
-      else{if(moved>6)dgStart();else return;}
-    }
-    e.preventDefault();dgMoveGhost(e.clientX,e.clientY);dgSetHot(dgHitAlbum(e.clientX,e.clientY));
-  },{passive:false});
-  function dgEnd(){
+  function dgGhost(x,y){if(dg&&dg.ghost){dg.ghost.style.left=x+'px';dg.ghost.style.top=y+'px';}}
+  function dgHot(x,y){const el=document.elementFromPoint(x,y);const card=el&&el.closest&&el.closest('.disc-card[data-album]');
+    const hot=(card&&card.dataset.album)?card:null;
+    if(dg.hot===hot)return;if(dg.hot)dg.hot.classList.remove('drop-hot');dg.hot=hot;if(hot)hot.classList.add('drop-hot');}
+  function dgFinish(){
     if(!dg)return;if(dg.timer)clearTimeout(dg.timer);
     const started=dg.started,id=dg.id,hot=dg.hot;
     if(dg.ghost)dg.ghost.remove();
     const src=libShelf.querySelector('[data-song="'+id+'"]');if(src)src.classList.remove('dragging');
     if(hot)hot.classList.remove('drop-hot');
     dg=null;
-    if(started&&hot){moveSongToAlbum(id,hot.dataset.album);}
+    if(started&&hot)moveSongToAlbum(id,hot.dataset.album);
     if(started)setTimeout(()=>{dragSuppressClick=false;},60);else dragSuppressClick=false;
   }
-  libShelf.addEventListener('pointerup',dgEnd);
-  libShelf.addEventListener('pointercancel',dgEnd);
+  // —— 手机:长按 340ms 拾起;拾起前手指移动>12px 视为滚动、取消 ——
+  libShelf.addEventListener('touchstart',e=>{
+    if(dgIgnore(e.target))return;const row=e.target.closest&&e.target.closest('[data-song]');if(!row)return;
+    const t=e.touches[0];dgBegin(row.dataset.song,t.clientX,t.clientY);
+    dg.timer=setTimeout(dgActivate,340);
+  },{passive:true});
+  libShelf.addEventListener('touchmove',e=>{
+    if(!dg)return;const t=e.touches[0];
+    if(!dg.started){const moved=Math.abs(t.clientX-dg.sx)+Math.abs(t.clientY-dg.sy);
+      if(moved>12){if(dg.timer){clearTimeout(dg.timer);dg.timer=null;}dg=null;}return;}
+    e.preventDefault(); // 已拾起 → 阻止页面滚动
+    dgGhost(t.clientX,t.clientY);dgHot(t.clientX,t.clientY);
+  },{passive:false});
+  libShelf.addEventListener('touchend',dgFinish);
+  libShelf.addEventListener('touchcancel',dgFinish);
+  // —— 电脑:按住移动 >6px 拾起 ——
+  libShelf.addEventListener('mousedown',e=>{
+    if(e.button!==0||dgIgnore(e.target))return;const row=e.target.closest&&e.target.closest('[data-song]');if(!row)return;
+    dgBegin(row.dataset.song,e.clientX,e.clientY);
+  });
+  window.addEventListener('mousemove',e=>{
+    if(!dg)return;
+    if(!dg.started){if(Math.abs(e.clientX-dg.sx)+Math.abs(e.clientY-dg.sy)>6)dgActivate();else return;}
+    dgGhost(e.clientX,e.clientY);dgHot(e.clientX,e.clientY);
+  });
+  window.addEventListener('mouseup',()=>{if(dg)dgFinish();});
 
   // ═══ 设备识别:电脑端 / 移动端 ═══
   function computeMode(){
