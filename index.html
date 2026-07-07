@@ -1025,9 +1025,13 @@
 
   /* ══════ 乐曲库首页(默认入口)══════ */
   /* 独立主界面:不透明底,像一个真正的首页而非弹层 */
-  .lib-pane{position:fixed;inset:0;z-index:400;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg);
-    opacity:1;transform:none;transition:opacity .45s ease,transform .5s cubic-bezier(.4,0,.2,1);}
-  body:not(.lib-on) .lib-pane{opacity:0;transform:scale(1.015);pointer-events:none;}
+  .lib-pane{position:fixed;inset:0;z-index:400;overflow:hidden;background:var(--bg);
+    opacity:1;transition:opacity .45s ease;}
+  body:not(.lib-on) .lib-pane{opacity:0;pointer-events:none;}
+  /* 真正的滚动层:与固定按钮条分离,避免 iOS 里 fixed 跟着滚 */
+  .lib-scroll{position:absolute;inset:0;z-index:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+    transition:transform .5s cubic-bezier(.4,0,.2,1);}
+  body:not(.lib-on) .lib-scroll{transform:scale(1.015);}
   .lib-pane .lib-aurora{position:fixed;inset:-18%;z-index:0;filter:blur(90px);opacity:.55;pointer-events:none;}
   .lib-pane .lib-aurora i{position:absolute;border-radius:50%;display:block;}
   .lib-pane .lib-aurora .a1{width:56vmax;height:52vmax;left:-12vmax;top:-14vmax;background:radial-gradient(circle at 40% 34%,#B6DCF4,transparent 66%);}
@@ -1123,8 +1127,8 @@
   .disc-menu button:active{background:var(--glass-2);}
   .disc-menu button.danger{color:#d9607e;}
   .disc-menu button .mi{font-size:14px;width:16px;text-align:center;}
-  /* 底部操作条 */
-  .lib-actions{position:fixed;left:0;right:0;bottom:0;z-index:401;display:flex;gap:10px;justify-content:center;
+  /* 底部操作条:始终固定在舞台底部,不随列表滚动 */
+  .lib-actions{position:absolute;left:0;right:0;bottom:0;z-index:401;display:flex;gap:10px;justify-content:center;
     padding:14px 20px calc(16px + env(safe-area-inset-bottom,0));
     background:linear-gradient(180deg,transparent,var(--bg) 45%);}
   body:not(.lib-on) .lib-actions{opacity:0;pointer-events:none;transition:opacity .3s;}
@@ -1155,13 +1159,15 @@
 <!-- ══ 乐曲库首页(默认入口)══ -->
 <div class="lib-pane" id="libPane">
   <div class="lib-aurora" aria-hidden="true"><i class="a1"></i><i class="a2"></i></div>
-  <div class="lib-inner">
-    <div class="lib-head"></div>
-    <div class="lib-shelf" id="libShelf"></div>
-    <div class="lib-actions">
-      <button class="lib-act primary" id="libNewSong">＋ 新乐曲</button>
-      <button class="lib-act" id="libNewAlbum">＋ 新唱片</button>
+  <div class="lib-scroll">
+    <div class="lib-inner">
+      <div class="lib-head"></div>
+      <div class="lib-shelf" id="libShelf"></div>
     </div>
+  </div>
+  <div class="lib-actions">
+    <button class="lib-act primary" id="libNewSong">＋ 新乐曲</button>
+    <button class="lib-act" id="libNewAlbum">＋ 新唱片</button>
   </div>
   <div class="disc-menu" id="discMenu"></div>
   <input type="file" id="coverInput" accept="image/*" style="display:none">
@@ -1177,7 +1183,6 @@
     </div>
     <div class="key-wrap">
       <button class="hdr-btn key-btn" id="keyBtn" title="选择调性 / 升降调 / 判调">C大调</button>
-      <button class="hdr-btn" id="btnShare" title="生成分享链接">🔗分享</button>
     </div>
   </div>
 
@@ -1534,7 +1539,7 @@
   const toast=$('toast');
   const aiOverlay=$('aiOverlay'),aiCard=$('aiCard');
   const octStage=$('octStage'),octCards=$('octCards'),octName=$('octName'),restBtnM=$('restBtnM');
-  const btnShare=$('btnShare'),storeOverlay=$('storeOverlay'),storeCard=$('storeCard');
+  const storeOverlay=$('storeOverlay'),storeCard=$('storeCard');
   let isMobileMode=false;
 
   let toastT;function flash(msg){toast.textContent=msg;toast.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>toast.classList.remove('on'),1400);}
@@ -3386,12 +3391,7 @@
     else prompt('复制此链接分享:',url);
   }
   function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
-  // 顶部「分享」:直接生成并复制当前乐曲的分享链接(存/取已由乐曲库承担)
-  if(btnShare)btnShare.addEventListener('click',()=>{
-    commitPhrase();
-    if(!song.some(p=>(p.melody&&p.melody.length)||(p.chords&&p.chords.length))){flash('还没有内容');return;}
-    shareLink();
-  });
+  // 分享入口已从写歌页移除;分享由乐曲库的乐曲三点菜单承担(shareSaveById)。
 
   // ═══ 乐曲库首页:唱片(可装多曲)+ 单曲,黑胶圆盘 + 流动展开 ═══
   // 模型:saves=各乐曲(带 id/name);lib.albums=唱片;lib.order=主界面陈列(唱片或单曲混排)。
