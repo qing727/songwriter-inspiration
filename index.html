@@ -2756,13 +2756,14 @@
   function chordName(c){return c.spec?specName(c.spec):c.rootLetter+(QUAL_SUFFIX[c.quality]||'');}
   function chordFreqs(c){
     if(c.spec){
-      const sp=c.spec,rootMidi=48+(sp.rootPC%12)+capo;
+      const sp=c.spec,rel=(((sp.rootPC%12)-(tonicPC%12))%12+12)%12,rootMidi=48+(tonicPC%12)+rel+capo;
       const fs=specIntervals(sp).map(s=>midiToFreq(rootMidi+s));
       const bpc=bassPC(sp);if(bpc!==(sp.rootPC%12)||(sp.bass&&sp.bass.mode==='slash'))fs.unshift(midiToFreq(36+bpc+capo)); // 低音置于低八度
       return fs;
     }
-    // 内置:和弦根音收拢到 C3–B3 低音区 + 变调夹整体升降
-    const rootMidi=48+(c.rootPC%12)+capo;
+    // 内置:根音相对主音展开——低于主音的根音升八度,使整条进行顺着级数走、不掉八度(修 G 调等和弦"从某个突然变低")
+    const rel=(((c.rootPC%12)-(tonicPC%12))%12+12)%12; // 相对主音的半音数 0..11
+    const rootMidi=48+(tonicPC%12)+rel+capo;
     return (QUAL_INT[c.quality]||QUAL_INT.maj).map(s=>440*Math.pow(2,(rootMidi+s-69)/12));
   }
   function playChord(c,durMs,arp){
